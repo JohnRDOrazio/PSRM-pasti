@@ -13,7 +13,14 @@ export function AdminToggle({ personId, date, meal, present, explicit }: { perso
       type="button"
       aria-pressed={present}
       disabled={pending}
-      onClick={() => start(async () => { await adminSetPresence({ personId, date, meal, state: !present }); router.refresh() })}
+      onClick={() => start(async () => {
+        try {
+          await adminSetPresence({ personId, date, meal, state: !present })
+        } catch (err) {
+          console.error(err)
+        }
+        router.refresh()
+      })}
       className={`relative rounded-full border px-3 py-1 text-xs font-medium ${present ? 'border-blue-800 bg-blue-800 text-white' : 'bg-white text-neutral-500'} disabled:opacity-40`}
     >
       {mealName[meal]}

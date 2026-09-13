@@ -14,7 +14,11 @@ export function GuestStepper({ date, meal, count: initial, note: initialNote }: 
   function save(next: number, nextNote = note) {
     setCount(next)
     start(async () => {
-      await setGuests({ date, meal, count: next, note: nextNote })
+      try {
+        await setGuests({ date, meal, count: next, note: nextNote })
+      } catch (err) {
+        console.error(err)
+      }
       router.refresh()
     })
   }

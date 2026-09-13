@@ -117,6 +117,7 @@ export const t = {
       title: 'Cucina',
       prevDay: 'Giorno precedente',
       nextDay: 'Giorno successivo',
+      go: 'Vai',
       community: 'Comunità',
       guests: 'Ospiti',
       total: 'Totale',

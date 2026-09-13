@@ -23,9 +23,15 @@ export default async function KitchenPage({ searchParams }: { searchParams: Prom
     db.rpc('season_default', { p_date: date, p_meal: 'dinner' }),
   ])
   if (rosterRes.error) throw new Error(rosterRes.error.message)
+  if (guestsRes.error) throw new Error(guestsRes.error.message)
+  if (lunchDef.error) throw new Error(lunchDef.error.message)
+  if (dinnerDef.error) throw new Error(dinnerDef.error.message)
+  if (typeof lunchDef.data !== 'boolean' || typeof dinnerDef.data !== 'boolean') {
+    throw new Error('season_default: expected boolean')
+  }
   const roster = rosterRes.data as RosterRow[]
   const guests = new Map(((guestsRes.data ?? []) as GuestRow[]).map((g) => [g.meal, g]))
-  const defaults: Record<Meal, boolean> = { lunch: lunchDef.data as boolean, dinner: dinnerDef.data as boolean }
+  const defaults: Record<Meal, boolean> = { lunch: lunchDef.data, dinner: dinnerDef.data }
 
   const nav = (to: IsoDate) => `/admin?d=${to}${showAll ? '&tutti=1' : ''}`
 
@@ -38,7 +44,7 @@ export default async function KitchenPage({ searchParams }: { searchParams: Prom
           <form action="/admin" className="flex items-center gap-2">
             <input type="date" name="d" defaultValue={date} className="rounded border px-2 py-1" />
             {showAll && <input type="hidden" name="tutti" value="1" />}
-            <button type="submit" className="rounded border px-3 py-1">OK</button>
+            <button type="submit" className="rounded border px-3 py-1">{t.admin.kitchen.go}</button>
           </form>
           <Link href={nav(addDays(date, 1))} aria-label={t.admin.kitchen.nextDay} className="rounded border px-3 py-1">›</Link>
         </div>
@@ -63,7 +69,7 @@ export default async function KitchenPage({ searchParams }: { searchParams: Prom
                 {s.byGroup.length > 1 && <> ({s.byGroup.map(([name, n]) => `${name} ${n}`).join(' · ')})</>}
                 {' · '}{t.admin.kitchen.guests} {guestCount}
               </p>
-              <div className="no-print"><GuestStepper date={date} meal={meal} count={guestCount} note={g?.note ?? null} /></div>
+              <div className="no-print"><GuestStepper key={`${date}-${meal}`} date={date} meal={meal} count={guestCount} note={g?.note ?? null} /></div>
               {g?.note && <p className="hidden text-sm print:block">{t.admin.kitchen.guests}: {g.note}</p>}
 
               <h3 className="mt-4 font-medium">
@@ -73,7 +79,7 @@ export default async function KitchenPage({ searchParams }: { searchParams: Prom
               <ul className="mt-2 divide-y text-sm">
                 {(showAll ? roster : listed).length === 0 && <li className="py-1 text-neutral-500">{t.admin.kitchen.nobody}</li>}
                 {(showAll ? roster : listed).map((r) => (
-                  <li key={r.person_id} className="flex items-center justify-between py-1">
+                  <li key={`${r.person_id}-${date}`} className="flex items-center justify-between py-1">
                     <span>{r.full_name}{r.group_name && <span className="ml-2 text-xs text-neutral-500">{r.group_name}</span>}</span>
                     <span className="no-print"><AdminToggle personId={r.person_id} date={date} meal={meal} present={isPresent(r, meal)} explicit={isExplicit(r, meal)} /></span>
                   </li>
