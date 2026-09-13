@@ -2,6 +2,7 @@
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import { setGuests } from '@/app/admin/(protected)/actions'
+import { Toast, useToast } from '@/components/Toast'
 import { t } from '@/i18n/it'
 import type { IsoDate, Meal } from '@/lib/dates'
 
@@ -10,6 +11,7 @@ export function GuestStepper({ date, meal, count: initial, note: initialNote }: 
   const [count, setCount] = useState(initial)
   const [note, setNote] = useState(initialNote ?? '')
   const [pending, start] = useTransition()
+  const { msg, show } = useToast()
 
   function save(next: number, nextNote = note) {
     setCount(next)
@@ -18,6 +20,9 @@ export function GuestStepper({ date, meal, count: initial, note: initialNote }: 
         await setGuests({ date, meal, count: next, note: nextNote })
       } catch (err) {
         console.error(err)
+        show(t.genericError, true)
+        setCount(initial)
+        setNote(initialNote ?? '')
       }
       router.refresh()
     })
@@ -37,6 +42,7 @@ export function GuestStepper({ date, meal, count: initial, note: initialNote }: 
         onBlur={() => count > 0 && save(count, note)}
         className="min-w-40 flex-1 rounded border px-2 py-1"
       />
+      <Toast msg={msg} />
     </div>
   )
 }

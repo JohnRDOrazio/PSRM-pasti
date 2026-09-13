@@ -90,7 +90,7 @@ export function PersonsTable({ rows }: { rows: PersonRow[] }) {
       )}
 
       {editing && (
-        <form onSubmit={submitForm} className="grid gap-3 rounded-xl bg-white p-4 shadow-sm md:grid-cols-3">
+        <form key={editing === 'new' ? 'new' : editing.id} onSubmit={submitForm} className="grid gap-3 rounded-xl bg-white p-4 shadow-sm md:grid-cols-3">
           <label className="block text-sm">
             {P.name}
             <input name="full_name" required maxLength={120} defaultValue={editing === 'new' ? '' : editing.full_name} className="mt-1 w-full rounded border p-2" />

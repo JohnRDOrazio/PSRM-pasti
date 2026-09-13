@@ -62,6 +62,7 @@ export const t = {
   no: 'No',
   loading: 'Attendere…',
   genericError: 'Si è verificato un errore, riprova.',
+  retry: 'Riprova',
   absentCount: (n: number) => plural(n, 'assente', 'assenti'),
   presentCount: (n: number) => plural(n, 'presente', 'presenti'),
   member: {

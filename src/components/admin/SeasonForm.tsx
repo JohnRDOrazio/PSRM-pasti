@@ -75,7 +75,7 @@ export function SeasonsEditor({ rows }: { rows: SeasonListRow[] }) {
       {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
 
       {editing && (
-        <form onSubmit={submit} className="grid gap-3 rounded-xl bg-white p-4 shadow-sm md:grid-cols-4">
+        <form key={editing === 'new' ? 'new' : editing.id} onSubmit={submit} className="grid gap-3 rounded-xl bg-white p-4 shadow-sm md:grid-cols-4">
           <label className="block text-sm">{S.label}<input name="label" required defaultValue={row?.label ?? ''} className="mt-1 w-full rounded border p-2" /></label>
           <label className="block text-sm">
             {S.kind}

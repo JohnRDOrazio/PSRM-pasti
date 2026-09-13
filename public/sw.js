@@ -1,4 +1,4 @@
-const CACHE = 'psrm-shell-v1'
+const CACHE = 'psrm-shell-v2'
 const SHELL = ['/offline', '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png']
 
 self.addEventListener('install', (event) => {
@@ -22,8 +22,10 @@ self.addEventListener('fetch', (event) => {
   if (url.origin === self.location.origin && (url.pathname.startsWith('/_next/static/') || url.pathname.startsWith('/icons/'))) {
     event.respondWith(
       caches.match(req).then((hit) => hit || fetch(req).then((res) => {
-        const copy = res.clone()
-        caches.open(CACHE).then((c) => c.put(req, copy))
+        if (res.ok) {
+          const copy = res.clone()
+          caches.open(CACHE).then((c) => c.put(req, copy))
+        }
         return res
       })),
     )

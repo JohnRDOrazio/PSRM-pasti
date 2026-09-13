@@ -54,6 +54,23 @@ describe('interval_cells', () => {
   })
 })
 
+describe('privileges', () => {
+  it('does not grant PUBLIC (anon/authenticated) execute on sensitive functions', async () => {
+    for (const role of ['anon', 'authenticated']) {
+      expect(await q`select has_function_privilege(
+          ${role},
+          'apply_change(uuid,actor_t,uuid,change_kind_t,date,meal_t,date,meal_t,boolean,timestamptz)',
+          'execute'
+        )::boolean as allowed`).toEqual([{ allowed: false }])
+    }
+    expect(await q`select has_function_privilege(
+        'anon',
+        'effective_presence(uuid,date,date)',
+        'execute'
+      )::boolean as allowed`).toEqual([{ allowed: false }])
+  })
+})
+
 describe('RLS', () => {
   it('is enabled on every table', async () => {
     const rows = await q`select relname from pg_class c join pg_namespace n on n.oid = c.relnamespace
