@@ -99,6 +99,7 @@ export const t = {
       too_old: 'Sono passate più di 24 ore.',
       superseded: 'Ci sono modifiche più recenti su questi pasti.',
       not_undoable: 'Questa modifica non può essere annullata.',
+      locked: 'I pasti di questa modifica sono già chiusi alle modifiche.',
     } as Record<string, string>,
   },
   invalidLink: { title: 'Link non valido', body: 'Chiedi in cucina un nuovo link.' },
