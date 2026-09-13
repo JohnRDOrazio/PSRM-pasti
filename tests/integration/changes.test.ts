@@ -72,6 +72,35 @@ describe('apply_change', () => {
     expect(await apply(p, '2026-10-20', 'dinner', '2026-10-20', 'lunch', false)).toEqual({ error: 'invalid_interval' })
     expect(await apply(p, '2026-01-01', 'lunch', '2027-12-31', 'dinner', false)).toEqual({ error: 'too_long' })
   })
+
+  it('rejects p_kind = undo', async () => {
+    const p = await createPerson()
+    const r = await apply(p, '2026-10-20', 'lunch', '2026-10-20', 'lunch', false, { p_kind: 'undo' })
+    expect(r).toEqual({ error: 'invalid_kind' })
+    expect(await q`select count(*)::int as n from changes`).toEqual([{ n: 0 }])
+    expect(await choices(p)).toEqual([])
+  })
+})
+
+describe('apply_change concurrency', () => {
+  it('serializes concurrent calls on the same person and cell', async () => {
+    const p = await createPerson()
+    const [a, b] = await Promise.all([
+      apply(p, '2026-10-20', 'lunch', '2026-10-20', 'lunch', false),
+      apply(p, '2026-10-20', 'lunch', '2026-10-20', 'lunch', true),
+    ])
+    expect(typeof a.change_id).toBe('string')
+    expect(typeof b.change_id).toBe('string')
+    expect(await q`select count(*)::int as n from changes`).toEqual([{ n: 2 }])
+
+    const rows = await choices(p)
+    const present = rows.length === 0 ? true : rows[0].present // no exception row → default (true) applies
+    const entryCount = await q`select count(*)::int as n from change_entries where change_id in (${a.change_id}, ${b.change_id})`
+    // Invariant regardless of which call the advisory lock let through first:
+    // final present === true (default) means both calls wrote an entry (the second undid the first's exception);
+    // final present === false means only the call that produced it wrote an entry (the other was a no-op).
+    expect(entryCount[0].n).toBe(present ? 2 : 1)
+  })
 })
 
 describe('undo_change', () => {
@@ -113,6 +142,25 @@ describe('undo_change', () => {
     const r = await apply(p, '2026-10-20', 'lunch', '2026-10-20', 'lunch', false)
     expect(await rpc('undo_change', { p_change: r.change_id, p_person: q, p_now: NOW })).toEqual({ error: 'not_found' })
     expect(await rpc('undo_change', { p_change: r.change_id, p_person: p, p_now: '2026-10-02T06:01:00Z' })).toEqual({ error: 'too_old' })
+  })
+
+  it('refuses to undo once a touched cell has passed its cutoff, even within 24h', async () => {
+    const p = await createPerson()
+    // Applied at 2026-10-13T20:00:00Z (22:00 CEST, cell still in the future → not locked then).
+    // Undo attempted 13h later at 2026-10-14T09:00:00Z (11:00 CEST) — within the 24h undo window,
+    // but the lunch cutoff (10:00) for 2026-10-14 has now passed.
+    const r = await apply(p, '2026-10-14', 'lunch', '2026-10-14', 'lunch', false, { p_now: '2026-10-13T20:00:00Z' })
+    expect(await rpc('undo_change', { p_change: r.change_id, p_person: p, p_now: '2026-10-14T09:00:00Z' }))
+      .toEqual({ error: 'locked' })
+    expect(await choices(p)).toEqual([{ date: '2026-10-14', meal: 'lunch', present: false }])
+  })
+
+  it('allows undo of the same change before its cutoff', async () => {
+    const p = await createPerson()
+    const r = await apply(p, '2026-10-14', 'lunch', '2026-10-14', 'lunch', false, { p_now: '2026-10-13T06:00:00Z' })
+    const u = await rpc('undo_change', { p_change: r.change_id, p_person: p, p_now: '2026-10-14T06:00:00Z' }) // 08:00 CEST, before cutoff
+    expect(typeof u.change_id).toBe('string')
+    expect(await choices(p)).toEqual([])
   })
 })
 

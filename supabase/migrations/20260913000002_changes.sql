@@ -49,6 +49,11 @@ begin
   if v_end_key - v_start_key + 1 > 800 then
     return jsonb_build_object('error', 'too_long');
   end if;
+  if p_kind = 'undo' then
+    return jsonb_build_object('error', 'invalid_kind');
+  end if;
+
+  perform pg_advisory_xact_lock(hashtext(p_person::text));
 
   if p_actor = 'member' then
     select jsonb_agg(jsonb_build_object('date', c.date, 'meal', c.meal) order by c.date, meal_ord(c.meal))
@@ -104,11 +109,18 @@ declare
   v_undo uuid;
   r      record;
 begin
-  select * into v_orig from changes where id = p_change and person_id = p_person;
+  perform pg_advisory_xact_lock(hashtext(p_person::text));
+
+  select * into v_orig from changes where id = p_change and person_id = p_person for update;
   if not found then return jsonb_build_object('error', 'not_found'); end if;
   if v_orig.undone_by is not null then return jsonb_build_object('error', 'already_undone'); end if;
   if v_orig.kind = 'undo' or v_orig.actor <> 'member' then return jsonb_build_object('error', 'not_undoable'); end if;
   if p_now - v_orig.created_at > interval '24 hours' then return jsonb_build_object('error', 'too_old'); end if;
+  if v_orig.actor = 'member' and exists (
+    select 1 from change_entries e where e.change_id = p_change and is_locked(e.date, e.meal, p_now)
+  ) then
+    return jsonb_build_object('error', 'locked');
+  end if;
   if exists (
     select 1
       from change_entries e
