@@ -139,6 +139,7 @@ export const t = {
       notes: 'Note',
       active: 'Attivo',
       inactive: 'Disattivato',
+      status: 'Stato',
       lastChange: 'Ultima modifica',
       never: 'mai',
       deactivate: 'Disattiva',

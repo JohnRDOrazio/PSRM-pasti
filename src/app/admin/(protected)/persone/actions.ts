@@ -54,7 +54,8 @@ export async function setPersonActive(id: string, active: boolean): Promise<void
 export async function deletePerson(id: string): Promise<{ ok: true } | { error: 'has_changes' }> {
   await requireAdmin()
   const pid = z.uuid().parse(id)
-  const { count } = await db.from('changes').select('id', { count: 'exact', head: true }).eq('person_id', pid)
+  const { count, error: countError } = await db.from('changes').select('id', { count: 'exact', head: true }).eq('person_id', pid)
+  if (countError) throw new Error(countError.message)
   if ((count ?? 0) > 0) return { error: 'has_changes' }
   const { error } = await db.from('persons').delete().eq('id', pid)
   if (error) throw new Error(error.message)

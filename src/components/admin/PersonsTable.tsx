@@ -23,11 +23,20 @@ export function PersonsTable({ rows }: { rows: PersonRow[] }) {
   const [reveal, setReveal] = useState<Reveal | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   function run(fn: () => Promise<void>) {
     start(async () => {
-      await fn()
-      router.refresh()
+      try {
+        await fn()
+        setError(null)
+      } catch (err) {
+        console.error(err)
+        setError(t.genericError)
+      } finally {
+        router.refresh()
+      }
     })
   }
 
@@ -47,8 +56,13 @@ export function PersonsTable({ rows }: { rows: PersonRow[] }) {
   }
 
   async function copy(text: string) {
-    await navigator.clipboard.writeText(text)
-    setNotice(P.copied)
+    try {
+      await navigator.clipboard.writeText(text)
+      setNotice(P.copied)
+    } catch (err) {
+      console.error(err)
+      setNotice(t.genericError)
+    }
     setTimeout(() => setNotice(null), 2000)
   }
 
@@ -57,6 +71,9 @@ export function PersonsTable({ rows }: { rows: PersonRow[] }) {
       <button type="button" onClick={() => setEditing('new')} className="rounded-full bg-blue-800 px-4 py-2 text-sm font-semibold text-white">
         {P.new}
       </button>
+
+      {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
+      {deleteError && <p role="alert" className="text-sm text-red-700">{deleteError}</p>}
 
       {reveal && (
         <section className="rounded-xl border-2 border-amber-400 bg-amber-50 p-4" data-testid="reveal">
@@ -99,6 +116,7 @@ export function PersonsTable({ rows }: { rows: PersonRow[] }) {
             <tr>
               <th className="p-2">{P.name}</th>
               <th className="p-2">{P.group}</th>
+              <th className="p-2">{P.status}</th>
               <th className="p-2">{P.lastChange}</th>
               <th className="p-2"></th>
             </tr>
@@ -108,10 +126,10 @@ export function PersonsTable({ rows }: { rows: PersonRow[] }) {
               <tr key={r.id} className={`border-t ${r.active ? '' : 'text-neutral-400'}`}>
                 <td className="p-2">
                   {r.full_name}
-                  {!r.active && <span className="ml-2 rounded bg-neutral-200 px-1 text-xs">{P.inactive}</span>}
                   {r.notes && <div className="text-xs text-neutral-500">{r.notes}</div>}
                 </td>
                 <td className="p-2">{r.group_name ?? ''}</td>
+                <td className="p-2">{r.active ? P.active : P.inactive}</td>
                 <td className="p-2">{r.last_change_at ? formatDateTime(r.last_change_at) : P.never}</td>
                 <td className="p-2">
                   <div className="flex flex-wrap justify-end gap-2">
@@ -121,9 +139,20 @@ export function PersonsTable({ rows }: { rows: PersonRow[] }) {
                       {r.active ? P.deactivate : P.activate}
                     </button>
                     {r.change_count === 0 && (confirmDelete === r.id ? (
-                      <button type="button" disabled={pending} onClick={() => run(async () => { await deletePerson(r.id); setConfirmDelete(null) })} className="rounded bg-red-600 px-2 py-1 text-white">{t.confirmDelete}</button>
+                      <button
+                        type="button"
+                        disabled={pending}
+                        onClick={() => run(async () => {
+                          const result = await deletePerson(r.id)
+                          setConfirmDelete(null)
+                          setDeleteError('error' in result ? P.cannotDelete : null)
+                        })}
+                        className="rounded bg-red-600 px-2 py-1 text-white"
+                      >
+                        {t.confirmDelete}
+                      </button>
                     ) : (
-                      <button type="button" onClick={() => setConfirmDelete(r.id)} className="rounded border border-red-300 px-2 py-1 text-red-700">{t.delete}</button>
+                      <button type="button" onClick={() => { setDeleteError(null); setConfirmDelete(r.id) }} className="rounded border border-red-300 px-2 py-1 text-red-700">{t.delete}</button>
                     ))}
                     {r.change_count > 0 && <span className="self-center text-xs text-neutral-400" title={P.cannotDelete}>{t.delete}: {P.cannotDelete}</span>}
                   </div>
