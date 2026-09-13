@@ -9,7 +9,15 @@ export function plural(n: number, one: string, many: string): string {
 
 const shortFmt = new Intl.DateTimeFormat('it-IT', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' })
 const longFmt = new Intl.DateTimeFormat('it-IT', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' })
-const dateTimeFmt = new Intl.DateTimeFormat('it-IT', { dateStyle: 'short', timeStyle: 'short', timeZone: ROME_TZ })
+const dateTimeFmt = new Intl.DateTimeFormat('it-IT', {
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+  timeZone: ROME_TZ,
+})
 
 export function formatDayShort(iso: IsoDate): string {
   return shortFmt.format(toUtcDate(iso))

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatDayLong, formatDayShort, intervalSummary, plural, t } from './it'
+import { formatDateTime, formatDayLong, formatDayShort, intervalSummary, plural, t } from './it'
 
 describe('plural', () => {
   it('picks singular for 1 and plural otherwise', () => {
@@ -13,6 +13,10 @@ describe('date formatting', () => {
   it('formats Italian short and long day labels', () => {
     expect(formatDayShort('2026-09-20')).toBe('dom 20 set')
     expect(formatDayLong('2026-09-20')).toBe('domenica 20 settembre')
+  })
+  it('formats a timestamptz as gg/mm/aaaa, hh:mm in Rome time', () => {
+    expect(formatDateTime('2026-09-20T08:30:00Z')).toBe('20/09/2026, 10:30') // CEST
+    expect(formatDateTime('2026-01-13T09:05:00Z')).toBe('13/01/2026, 10:05') // CET
   })
 })
 
