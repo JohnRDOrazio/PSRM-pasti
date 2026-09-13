@@ -83,23 +83,26 @@ describe('apply_change', () => {
 })
 
 describe('apply_change concurrency', () => {
-  it('serializes concurrent calls on the same person and cell', async () => {
+  it('double-tap: two concurrent calls with the same state write only one entry', async () => {
+    // October: season default present=true for both meals, so p_state=false differs from the
+    // default for both concurrent calls — neither call is a no-op on its own. Without the
+    // per-person advisory lock, both would read the (still absent) exception row concurrently
+    // under read-committed and each write its own change_entries row (2 entries, both prev
+    // null) — a duplicate, redundant write. With the lock, the second call must observe the
+    // first's committed meal_choices row (present=false, already equal to p_state) and skip.
     const p = await createPerson()
     const [a, b] = await Promise.all([
       apply(p, '2026-10-20', 'lunch', '2026-10-20', 'lunch', false),
-      apply(p, '2026-10-20', 'lunch', '2026-10-20', 'lunch', true),
+      apply(p, '2026-10-20', 'lunch', '2026-10-20', 'lunch', false),
     ])
     expect(typeof a.change_id).toBe('string')
     expect(typeof b.change_id).toBe('string')
     expect(await q`select count(*)::int as n from changes`).toEqual([{ n: 2 }])
 
-    const rows = await choices(p)
-    const present = rows.length === 0 ? true : rows[0].present // no exception row → default (true) applies
-    const entryCount = await q`select count(*)::int as n from change_entries where change_id in (${a.change_id}, ${b.change_id})`
-    // Invariant regardless of which call the advisory lock let through first:
-    // final present === true (default) means both calls wrote an entry (the second undid the first's exception);
-    // final present === false means only the call that produced it wrote an entry (the other was a no-op).
-    expect(entryCount[0].n).toBe(present ? 2 : 1)
+    const entries = await q`select prev_present, new_present from change_entries where change_id in (${a.change_id}, ${b.change_id})`
+    expect(entries).toEqual([{ prev_present: null, new_present: false }])
+
+    expect(await choices(p)).toEqual([{ date: '2026-10-20', meal: 'lunch', present: false }])
   })
 })
 
