@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import type { IsoDate, Meal } from '@/lib/dates'
 import { mealName, t } from '@/i18n/it'
+import { setCell, toggledCell } from './dayList.logic'
 import { Pill } from './Pill'
 import { Toast, useToast } from './Toast'
 
@@ -21,26 +22,42 @@ export interface DayRow {
 
 export function DayList({ rows: initial, cutoffs }: { rows: DayRow[]; cutoffs: { lunch: string; dinner: string } }) {
   const [rows, setRows] = useState(initial)
+  const [pending, setPending] = useState<Set<string>>(new Set())
   const { msg, show } = useToast()
 
   async function toggle(date: IsoDate, meal: Meal) {
-    const before = rows
+    const key = `${date}-${meal}`
+    if (pending.has(key)) return
     const row = rows.find((r) => r.date === date)!
-    const cell = row[meal]
-    if (cell.locked) return
-    const next = !cell.present
-    setRows(rows.map((r) => (r.date === date ? { ...r, [meal]: { ...cell, present: next, explicit: next !== cell.defaultPresent } } : r)))
-    const res = await fetch('/api/choices', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ start_date: date, start_meal: meal, end_date: date, end_meal: meal, state: next }),
-    })
-    if (!res.ok) {
-      setRows(before)
-      show(res.status === 409 ? t.member.lockedError : t.member.saveError, true)
-      return
+    const before = row[meal]
+    if (before.locked) return
+    const after = toggledCell(before)
+
+    setPending((p) => new Set(p).add(key))
+    setRows((rs) => setCell(rs, date, meal, after))
+
+    try {
+      const res = await fetch('/api/choices', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ start_date: date, start_meal: meal, end_date: date, end_meal: meal, state: after.present }),
+      })
+      if (!res.ok) {
+        setRows((rs) => setCell(rs, date, meal, before))
+        show(res.status === 409 ? t.member.lockedError : t.member.saveError, true)
+        return
+      }
+      show(t.member.saved)
+    } catch {
+      setRows((rs) => setCell(rs, date, meal, before))
+      show(t.member.saveError, true)
+    } finally {
+      setPending((p) => {
+        const next = new Set(p)
+        next.delete(key)
+        return next
+      })
     }
-    show(t.member.saved)
   }
 
   return (
@@ -51,7 +68,7 @@ export function DayList({ rows: initial, cutoffs }: { rows: DayRow[]; cutoffs: {
             <span className="font-medium capitalize">{r.label}</span>
             {r.isToday && (
               <span className="text-xs text-neutral-500">
-                {t.member.today} · {t.member.lockedAt(r.lunch.locked && !r.dinner.locked ? cutoffs.dinner : cutoffs.lunch)}
+                {t.member.today} · {t.member.lockedAt(r.lunch.locked ? cutoffs.dinner : cutoffs.lunch)}
               </span>
             )}
           </div>
