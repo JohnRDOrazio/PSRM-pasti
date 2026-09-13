@@ -5,6 +5,8 @@ import { hashToken } from '../../src/server/token'
 export const E2E = {
   adminEmail: 'admin@e2e.local',
   adminPassword: 'e2e-password-123',
+  nonAdminEmail: 'user@e2e.local',
+  nonAdminPassword: 'e2e-password-123',
   memberToken: 'e2e'.padEnd(43, 'x'),
   memberName: 'Mario Rossi E2E',
 }
@@ -28,5 +30,12 @@ export default async function globalSetup() {
     user = data.user
   }
   await sql`insert into admins (user_id) values (${user.id}) on conflict do nothing`
+
+  const hasNonAdmin = list.users.some((u) => u.email === E2E.nonAdminEmail)
+  if (!hasNonAdmin) {
+    const { error } = await supa.auth.admin.createUser({ email: E2E.nonAdminEmail, password: E2E.nonAdminPassword, email_confirm: true })
+    if (error) throw error
+  }
+
   await sql.end()
 }

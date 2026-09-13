@@ -35,16 +35,22 @@ export interface Admin {
   email: string | null
 }
 
-export async function getAdmin(): Promise<Admin | null> {
+async function getAdminStatus(): Promise<{ user: { id: string; email: string | null } | null; admin: Admin | null }> {
   const supa = await authClient()
   const { data: { user } } = await supa.auth.getUser()
-  if (!user) return null
+  if (!user) return { user: null, admin: null }
   const { data } = await db.from('admins').select('user_id').eq('user_id', user.id).maybeSingle()
-  return data ? { userId: user.id, email: user.email ?? null } : null
+  const admin = data ? { userId: user.id, email: user.email ?? null } : null
+  return { user: { id: user.id, email: user.email ?? null }, admin }
+}
+
+export async function getAdmin(): Promise<Admin | null> {
+  const { admin } = await getAdminStatus()
+  return admin
 }
 
 export async function requireAdmin(): Promise<Admin> {
-  const admin = await getAdmin()
-  if (!admin) redirect('/admin/login')
+  const { user, admin } = await getAdminStatus()
+  if (!admin) redirect(user ? '/admin/login?e=noadmin' : '/admin/login')
   return admin
 }

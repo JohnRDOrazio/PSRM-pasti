@@ -110,6 +110,7 @@ export const t = {
     email: 'Email',
     password: 'Password',
     loginError: 'Email o password non validi.',
+    notAdmin: 'Questo account non è abilitato come amministratore.',
     logout: 'Esci',
     nav: { kitchen: 'Cucina', persons: 'Persone', seasons: 'Stagioni', settings: 'Impostazioni', log: 'Registro' },
     kitchen: {
