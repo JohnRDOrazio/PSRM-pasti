@@ -49,7 +49,7 @@ export default async function ConfirmPage({ searchParams }: { searchParams: Prom
           <ul className="mt-2 space-y-1 text-sm">
             {overwritten.slice(0, MAX_SHOWN).map((o) => (
               <li key={`${o.date}-${o.meal}`}>
-                {formatDayShort(o.date)}, {mealNameLower[o.meal]}: era <strong>{stateLabel(o.prev_present).toLowerCase()}</strong>
+                {formatDayShort(o.date)}, {mealNameLower[o.meal]}: {t.period.was} <strong>{stateLabel(o.prev_present).toLowerCase()}</strong>
               </li>
             ))}
             {overwritten.length > MAX_SHOWN && <li className="text-neutral-500">{t.period.overwrittenMore(overwritten.length - MAX_SHOWN)}</li>}

@@ -90,6 +90,7 @@ export const t = {
     overwrittenTitle: 'Scelte precedenti sostituite',
     overwrittenMore: (n: number) => `+${plural(n, 'altro', 'altri')}`,
     noOverwritten: 'Nessuna scelta precedente è stata sostituita.',
+    was: 'era',
     undo: 'Annulla',
     undone: 'Modifica annullata.',
     backToList: 'Torna all’elenco',

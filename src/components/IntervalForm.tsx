@@ -29,18 +29,27 @@ export function IntervalForm({ min }: { min: Cell }) {
     e.preventDefault()
     if (error || busy) return
     setBusy(true)
-    const res = await fetch('/api/choices', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ start_date: startDate, start_meal: startMeal, end_date: endDate, end_meal: endMeal, state }),
-    })
-    setBusy(false)
-    if (!res.ok) {
-      show(res.status === 409 ? t.period.lockedError : t.genericError, true)
-      return
+    try {
+      const res = await fetch('/api/choices', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ start_date: startDate, start_meal: startMeal, end_date: endDate, end_meal: endMeal, state }),
+      })
+      if (!res.ok) {
+        show(res.status === 409 ? t.period.lockedError : t.genericError, true)
+        return
+      }
+      const body = (await res.json().catch(() => null)) as { change_id?: string } | null
+      if (!body?.change_id) {
+        show(t.genericError, true)
+        return
+      }
+      router.push(`/periodo/conferma?c=${body.change_id}`)
+    } catch {
+      show(t.genericError, true)
+    } finally {
+      setBusy(false)
     }
-    const { change_id } = (await res.json()) as { change_id: string }
-    router.push(`/periodo/conferma?c=${change_id}`)
   }
 
   const seg = (value: boolean, label: string) => (
