@@ -20,8 +20,15 @@ const personSchema = z.object({
 })
 export type PersonInput = z.input<typeof personSchema>
 
+function appBaseUrl(): string {
+  const url = process.env.APP_BASE_URL
+  if (url) return url
+  if (process.env.NODE_ENV === 'production') throw new Error('APP_BASE_URL is not set')
+  return 'http://localhost:3100'
+}
+
 async function reveal(id: string, token: string): Promise<Reveal> {
-  const link = personLink(process.env.APP_BASE_URL ?? 'http://localhost:3000', token)
+  const link = personLink(appBaseUrl(), token)
   const qr = await QRCode.toDataURL(link, { width: 256, margin: 1 })
   return { id, token, link, qr }
 }

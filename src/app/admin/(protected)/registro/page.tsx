@@ -1,3 +1,4 @@
+import { z } from 'zod'
 import { formatDateTime, intervalSummary, kindLabel, stateLabel, t } from '@/i18n/it'
 import { type IsoDate, type Meal, isIsoDate } from '@/lib/dates'
 import { expandInterval } from '@/lib/interval'
@@ -37,7 +38,7 @@ export default async function LogPage({ searchParams }: { searchParams: Promise<
     .select('id, actor, kind, start_date, start_meal, end_date, end_meal, state, created_at, undone_by, persons!changes_person_id_fkey(full_name)')
     .order('created_at', { ascending: false })
     .limit(200)
-  if (p) q = q.eq('person_id', p)
+  if (p && z.uuid().safeParse(p).success) q = q.eq('person_id', p)
   if (from && isIsoDate(from)) q = q.gte('start_date', from)
   if (to && isIsoDate(to)) q = q.lte('end_date', to)
   const { data, error } = await q

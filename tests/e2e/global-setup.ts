@@ -20,6 +20,7 @@ export default async function globalSetup() {
 
   await sql`truncate change_entries, meal_choices, changes, meal_guests, persons cascade`
   await sql`insert into persons (full_name, group_name, token_hash) values (${E2E.memberName}, 'Ospiti', ${hashToken(E2E.memberToken)})`
+  await sql`update settings set value = '"10:00"' where key in ('lunch_cutoff', 'dinner_cutoff')`
 
   const { data: list, error: listErr } = await supa.auth.admin.listUsers()
   if (listErr) throw listErr
