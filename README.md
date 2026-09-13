@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PSRM Pasti
 
-## Getting Started
+PWA per segnare presenza/assenza ai pasti (pranzo e cena) di una comunità di ~60 persone.
+Ogni persona ha un link personale; la cucina ha un accesso amministratore.
 
-First, run the development server:
+## Sviluppo locale
+
+Requisiti: Node 22+, Docker (per Supabase locale).
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run db:start          # avvia Postgres/Auth locali (prima volta: scarica le immagini)
+npm run db:reset          # applica migrazioni + seed
+npm run db:env            # scrive .env.local
+npx tsx scripts/create-admin.ts admin@example.org 'password-forte'
+npm run dev               # http://localhost:3100
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Crea le persone da `/admin/persone`: il link personale è mostrato una sola volta (copia o QR).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Test
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm test                  # unit (vitest)
+npm run test:integration  # funzioni Postgres contro Supabase locale
+npm run test:e2e          # Playwright (usa .env.local + dev server su :3100)
+```
 
-## Learn More
+## Deploy
 
-To learn more about Next.js, take a look at the following resources:
+1. **Supabase**: crea un progetto; in *Project Settings → API* copia URL, anon key e service-role key.
+   Applica le migrazioni: `npx supabase link --project-ref <ref> && npx supabase db push`,
+   poi esegui `supabase/seed.sql` nell'SQL editor (solo la prima volta).
+   In *Authentication → Providers* lascia attivo Email; disattiva le registrazioni pubbliche
+   (*Authentication → Settings → Allow new users to sign up: off*).
+2. **Admin**: `SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... npx tsx scripts/create-admin.ts email password`.
+3. **Vercel**: importa il repo; variabili d'ambiente:
+   `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
+   `APP_BASE_URL` (es. `https://pasti.tuodominio.it`). Deploy.
+4. Apri `/admin`, accedi, crea le persone e distribuisci i link.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Non committare mai `.env.local` (o altri file `.env*.local`): contengono chiavi di servizio.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Struttura
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `supabase/migrations` — schema e funzioni (`apply_change`, `undo_change`, `season_default`, …)
+- `src/lib` — logica pura condivisa (date, intervalli, cutoff)
+- `src/server` — accesso al DB con service role, autenticazione
+- `src/app` — pagine membro (`/`, `/periodo`), API, area `/admin`
+- `tests/e2e` — smoke test Playwright (`npm run test:e2e`)
