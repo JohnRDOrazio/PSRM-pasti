@@ -12,10 +12,13 @@ test('admin changes and restores the dinner cutoff', async ({ page }) => {
   await page.getByLabel('Chiusura modifiche cena').fill('15:00')
   await page.getByRole('button', { name: 'Salva' }).click()
   await expect(page.getByText('Impostazioni salvate.')).toBeVisible()
-  await page.reload()
+  await page.goto('/admin/impostazioni')
   await expect(page.getByLabel('Chiusura modifiche cena')).toHaveValue('15:00')
 
   await page.getByLabel('Chiusura modifiche cena').fill('10:00')
   await page.getByRole('button', { name: 'Salva' }).click()
   await expect(page.getByText('Impostazioni salvate.')).toBeVisible()
+
+  await page.goto('/admin/impostazioni')
+  await expect(page.getByLabel('Chiusura modifiche cena')).toHaveValue('10:00')
 })

@@ -48,3 +48,4 @@ Non committare mai `.env.local` (o altri file `.env*.local`): contengono chiavi 
 - `src/server` — accesso al DB con service role, autenticazione
 - `src/app` — pagine membro (`/`, `/periodo`), API, area `/admin`
 - `tests/e2e` — smoke test Playwright (`npm run test:e2e`)
+- `docs/superpowers/specs` — specifica di progetto

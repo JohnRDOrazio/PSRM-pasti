@@ -20,6 +20,7 @@ test('shows 30 days and persists a toggle', async ({ page }) => {
   // restore
   await page.getByRole('button', { name: 'Pranzo' }).nth(5).click()
   await expect(page.getByRole('status')).toHaveText('Salvato')
+  await expect(page.getByRole('button', { name: 'Pranzo' }).nth(5)).toHaveAttribute('aria-pressed', before!)
 })
 
 test('interval save shows confirmation and undo restores', async ({ page }) => {
