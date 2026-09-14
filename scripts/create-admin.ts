@@ -19,10 +19,17 @@ async function main() {
     console.error('usage: tsx scripts/create-admin.ts <email> <password>')
     process.exit(1)
   }
-  try {
-    process.loadEnvFile('.env.local')
-  } catch {
-    /* env already set (CI / prod shell) */
+  // Explicit env vars win (e.g. pointing at production); fall back to .env.local for the local stack.
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    try {
+      process.loadEnvFile('.env.local')
+    } catch {
+      /* no .env.local: rely on the shell environment */
+    }
+  }
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.error('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set (env or .env.local)')
+    process.exit(1)
   }
 
   const supa = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
