@@ -41,7 +41,8 @@ Il repo ha due workflow GitHub Actions:
 1. **Supabase**: crea un progetto; in *Project Settings → API* copia URL, anon key e service-role key;
    in *Project Settings → General* copia il **Reference ID**. In *Authentication → Providers* lascia
    attivo Email; disattiva le registrazioni pubbliche (*Authentication → Settings → Allow new users to
-   sign up: off*).
+   sign up: off*). Sempre in *Authentication → Settings* imposta **Minimum password length: 8** e attiva
+   **Secure password change** (come in `supabase/config.toml`, che vale solo per lo stack locale).
 2. **Segreti GitHub** (*Settings → Environments → `production` → Environment secrets*):
    - `SUPABASE_ACCESS_TOKEN` — personal access token da https://supabase.com/dashboard/account/tokens
    - `SUPABASE_DB_PASSWORD` — password del database del progetto
