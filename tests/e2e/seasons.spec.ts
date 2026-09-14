@@ -4,7 +4,7 @@ import { E2E } from './global-setup'
 test('admin adds a one-off season and it changes the kitchen default', async ({ page }) => {
   await page.goto('/admin/login')
   await page.getByLabel('Email').fill(E2E.adminEmail)
-  await page.getByLabel('Password').fill(E2E.adminPassword)
+  await page.getByLabel('Password', { exact: true }).fill(E2E.adminPassword)
   await page.getByRole('button', { name: 'Accedi' }).click()
   await expect(page).toHaveURL(/\/admin$/)
 

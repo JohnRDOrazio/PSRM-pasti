@@ -43,6 +43,11 @@ Il repo ha due workflow GitHub Actions:
    attivo Email; disattiva le registrazioni pubbliche (*Authentication → Settings → Allow new users to
    sign up: off*). Sempre in *Authentication → Settings* imposta **Minimum password length: 8** e attiva
    **Secure password change** (come in `supabase/config.toml`, che vale solo per lo stack locale).
+   Per il recupero password via email: in *Authentication → URL Configuration* imposta **Site URL** =
+   `https://psrm-pasti.vercel.app` (il tuo dominio) e aggiungi `https://psrm-pasti.vercel.app/admin/reset/nuova`
+   ai **Redirect URLs**; in *Authentication → Emails → Reset Password* sostituisci il corpo con il contenuto di
+   `supabase/templates/recovery.html` (il link usa `{{ .TokenHash }}`, non `{{ .ConfirmationURL }}`).
+   Gli amministratori devono avere un indirizzo email reale per poter ricevere il link.
 2. **Segreti GitHub** (*Settings → Environments → `production` → Environment secrets*):
    - `SUPABASE_ACCESS_TOKEN` — personal access token da https://supabase.com/dashboard/account/tokens
    - `SUPABASE_DB_PASSWORD` — password del database del progetto
@@ -57,7 +62,8 @@ Il repo ha due workflow GitHub Actions:
    `APP_BASE_URL` (es. `https://pasti.tuodominio.it`, deve essere https). Ogni push su `main` va in
    produzione; ogni PR ottiene un deploy di anteprima.
 6. Apri `/admin`, accedi, crea le persone e distribuisci i link. Ogni amministratore può cambiare la propria
-   password da *Password* nel menu; se la dimentica, rilancia `scripts/create-admin.ts` con la stessa email.
+   password da *Password* nel menu o reimpostarla da *Password dimenticata?* nella pagina di accesso; in
+   alternativa rilancia `scripts/create-admin.ts` con la stessa email e una nuova password.
 
 Non committare mai `.env.local` (o altri file `.env*.local`): contengono chiavi di servizio.
 

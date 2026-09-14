@@ -21,7 +21,7 @@ test.afterEach(async () => {
 test('admin changes and restores the dinner cutoff', async ({ page }) => {
   await page.goto('/admin/login')
   await page.getByLabel('Email').fill(E2E.adminEmail)
-  await page.getByLabel('Password').fill(E2E.adminPassword)
+  await page.getByLabel('Password', { exact: true }).fill(E2E.adminPassword)
   await page.getByRole('button', { name: 'Accedi' }).click()
   await expect(page).toHaveURL(/\/admin$/)
 

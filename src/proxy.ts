@@ -23,8 +23,9 @@ async function adminGuard(request: NextRequest) {
     },
   })
   const { data: { user } } = await supa.auth.getUser()
-  const isLogin = request.nextUrl.pathname === '/admin/login'
-  if (!user && !isLogin) return NextResponse.redirect(new URL('/admin/login', request.url))
+  const { pathname } = request.nextUrl
+  const isPublicAuthPage = pathname === '/admin/login' || pathname === '/admin/reset' || pathname.startsWith('/admin/reset/')
+  if (!user && !isPublicAuthPage) return NextResponse.redirect(new URL('/admin/login', request.url))
   return res
 }
 
