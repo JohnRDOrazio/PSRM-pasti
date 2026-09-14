@@ -21,9 +21,24 @@ export function NewPasswordForm() {
   useEffect(() => {
     let cancelled = false
     const params = new URLSearchParams(window.location.search)
-    // A missing/malformed token is simply rejected by the API, so one async path covers every case.
-    const tokenHash = params.get('type') === 'recovery' ? (params.get('token_hash') ?? '') : ''
-    supa.auth.verifyOtp({ token_hash: tokenHash, type: 'recovery' }).then(({ error }) => {
+    // Two link shapes: custom template → ?token_hash=…&type=recovery; stock Supabase template →
+    // /auth/v1/verify redirects here with ?code=… (PKCE; the verifier lives in this browser's cookie).
+    const tokenHash = params.get('token_hash')
+    const code = params.get('code')
+    const verify = async () => {
+      if (params.get('type') === 'recovery' && tokenHash) {
+        return supa.auth.verifyOtp({ token_hash: tokenHash, type: 'recovery' })
+      }
+      if (code) {
+        // The browser client exchanges ?code= itself on initialisation (detectSessionInUrl);
+        // a manual exchange would burn the one-time code. Fall back to it only if nothing was established.
+        const { data: { session } } = await supa.auth.getSession()
+        if (session) return { error: null }
+        return supa.auth.exchangeCodeForSession(code)
+      }
+      return { error: new Error('missing token') }
+    }
+    verify().then(({ error }) => {
       if (!cancelled) setState(error ? 'invalid' : 'ready')
     })
     return () => {

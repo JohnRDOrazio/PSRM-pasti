@@ -72,3 +72,49 @@ test('an invalid recovery token shows an error instead of the form', async ({ pa
   await expect(page.getByText('Link non valido o scaduto.')).toBeVisible()
   await expect(page.getByLabel('Nuova password', { exact: true })).toHaveCount(0)
 })
+
+/** Local stack's Mailpit (port from supabase/config.toml [inbucket]). Returns the first link in the newest mail to `to`. */
+async function recoveryLinkFromMailbox(to: string): Promise<string> {
+  const base = 'http://127.0.0.1:54324/api/v1'
+  await expect
+    .poll(async () => {
+      const res = await fetch(`${base}/search?query=${encodeURIComponent(`to:${to}`)}`)
+      const body = (await res.json()) as { messages: { ID: string }[] }
+      return body.messages.length
+    }, { timeout: 15_000 })
+    .toBeGreaterThan(0)
+  const search = (await (await fetch(`${base}/search?query=${encodeURIComponent(`to:${to}`)}`)).json()) as { messages: { ID: string }[] }
+  const msg = (await (await fetch(`${base}/message/${search.messages[0].ID}`)).json()) as { HTML: string; Text: string }
+  const match = /href="([^"]+)"/.exec(msg.HTML) ?? /(https?:\/\/\S+)/.exec(msg.Text)
+  if (!match) throw new Error('no link in recovery mail')
+  return match[1].replace(/&amp;/g, '&')
+}
+
+test('stock recovery e-mail (no custom template) lands on the new-password page via ?code=', async ({ page }) => {
+  // Clear the mailbox so we read the mail produced by this test.
+  await fetch('http://127.0.0.1:54324/api/v1/messages', { method: 'DELETE' })
+
+  await page.goto('/admin/reset')
+  await page.getByLabel('Email').fill(E2E.adminEmail)
+  await page.getByRole('button', { name: 'Invia il link' }).click()
+  await expect(page.getByText(/Se l’indirizzo è registrato/)).toBeVisible()
+
+  const link = await recoveryLinkFromMailbox(E2E.adminEmail)
+  expect(link).toContain('/auth/v1/verify')
+  try {
+    await page.goto(link) // GoTrue verifies and redirects to /admin/reset/nuova?code=…
+    await expect(page).toHaveURL(/\/admin\/reset\/nuova\?code=/)
+    await page.getByLabel('Nuova password', { exact: true }).fill(RECOVERED_PASSWORD)
+    await page.getByLabel('Conferma nuova password').fill(RECOVERED_PASSWORD)
+    await page.getByRole('button', { name: 'Aggiorna password' }).click()
+    await expect(page.getByText('Password aggiornata.')).toBeVisible()
+  } finally {
+    const supa = serviceClient()
+    const { data: list, error: listErr } = await supa.auth.admin.listUsers({ perPage: 200 })
+    if (listErr) throw listErr
+    const user = list.users.find((u) => u.email === E2E.adminEmail)
+    if (!user) throw new Error('e2e admin user not found during cleanup')
+    const { error } = await supa.auth.admin.updateUserById(user.id, { password: E2E.adminPassword })
+    if (error) throw error
+  }
+})

@@ -45,9 +45,11 @@ Il repo ha due workflow GitHub Actions:
    **Secure password change** (come in `supabase/config.toml`, che vale solo per lo stack locale).
    Per il recupero password via email: in *Authentication → URL Configuration* imposta **Site URL** =
    `https://<dominio-dell-app>` (l'origine con cui gli utenti aprono l'app, la stessa di `APP_BASE_URL`) e aggiungi
-   `https://<dominio-dell-app>/admin/reset/nuova` ai **Redirect URLs**; in *Authentication → Emails → Reset Password* sostituisci il corpo con il contenuto di
-   `supabase/templates/recovery.html` (il link usa `{{ .TokenHash }}`, non `{{ .ConfirmationURL }}`).
-   Gli amministratori devono avere un indirizzo email reale per poter ricevere il link.
+   `https://<dominio-dell-app>/admin/reset/nuova` ai **Redirect URLs**. Il template email standard di Supabase
+   funziona così com'è (il link passa da `/auth/v1/verify` e arriva su `/admin/reset/nuova?code=…`); se configuri
+   un SMTP personalizzato puoi usare `supabase/templates/recovery.html` come *Reset Password* template (link con
+   `{{ .TokenHash }}`), anch'esso supportato. Il servizio email integrato di Supabase è limitato a pochi messaggi
+   all'ora: sufficiente per i reset occasionali degli amministratori, che devono avere un indirizzo email reale.
 2. **Segreti GitHub** (*Settings → Environments → `production` → Environment secrets*):
    - `SUPABASE_ACCESS_TOKEN` — personal access token da https://supabase.com/dashboard/account/tokens
    - `SUPABASE_DB_PASSWORD` — password del database del progetto
