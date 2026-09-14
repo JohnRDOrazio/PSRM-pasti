@@ -1,6 +1,7 @@
 'use client'
 import { createBrowserClient } from '@supabase/ssr'
 import { useState } from 'react'
+import { PasswordInput } from '@/components/PasswordInput'
 import { t } from '@/i18n/it'
 
 const MIN_LENGTH = 8
@@ -41,18 +42,11 @@ export function ChangePasswordForm({ email }: { email: string }) {
     }
   }
 
-  const field = (label: string, value: string, onChange: (v: string) => void, autoComplete: string) => (
-    <label className="block text-sm">
-      {label}
-      <input type="password" value={value} onChange={(e) => onChange(e.target.value)} required autoComplete={autoComplete} className="mt-1 w-full rounded border p-2" />
-    </label>
-  )
-
   return (
     <form onSubmit={submit} className="space-y-4 rounded-xl bg-white p-4 shadow-sm">
-      {field(P.current, current, setCurrent, 'current-password')}
-      {field(P.next, next, setNext, 'new-password')}
-      {field(P.confirm, confirm, setConfirm, 'new-password')}
+      <PasswordInput label={P.current} value={current} onChange={setCurrent} autoComplete="current-password" />
+      <PasswordInput label={P.next} value={next} onChange={setNext} autoComplete="new-password" />
+      <PasswordInput label={P.confirm} value={confirm} onChange={setConfirm} autoComplete="new-password" />
       {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
       {saved && <p role="status" className="text-sm text-green-700">{P.saved}</p>}
       <button type="submit" disabled={busy} className="rounded-full bg-blue-800 px-4 py-2 text-sm font-semibold text-white disabled:opacity-40">
