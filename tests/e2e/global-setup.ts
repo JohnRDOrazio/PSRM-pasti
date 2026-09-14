@@ -22,11 +22,19 @@ export default async function globalSetup() {
   await sql`insert into persons (full_name, group_name, token_hash) values (${E2E.memberName}, 'Ospiti', ${hashToken(E2E.memberToken)})`
   await sql`update settings set value = '"10:00"' where key in ('lunch_cutoff', 'dinner_cutoff')`
 
-  const { data: list, error: listErr } = await supa.auth.admin.listUsers()
-  if (listErr) throw listErr
+  // listUsers is paginated: walk every page before concluding the user is missing.
+  async function findAuthUserByEmail(email: string) {
+    for (let page = 1; ; page++) {
+      const { data, error } = await supa.auth.admin.listUsers({ page, perPage: 200 })
+      if (error) throw error
+      const hit = data.users.find((u) => u.email === email)
+      if (hit) return hit
+      if (data.nextPage === null || data.users.length === 0) return undefined
+    }
+  }
   // Ensure each auth user exists with the declared password (re-sync existing ones every run).
   async function ensureUser(email: string, password: string) {
-    const existing = list.users.find((u) => u.email === email)
+    const existing = await findAuthUserByEmail(email)
     if (existing) {
       const { error } = await supa.auth.admin.updateUserById(existing.id, { password, email_confirm: true })
       if (error) throw error
