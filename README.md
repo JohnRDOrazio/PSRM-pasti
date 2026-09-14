@@ -28,16 +28,33 @@ npm run test:e2e          # Playwright (usa .env.local + dev server su :3100)
 
 ## Deploy
 
-1. **Supabase**: crea un progetto; in *Project Settings → API* copia URL, anon key e service-role key.
-   Applica le migrazioni: `npx supabase link --project-ref <ref> && npx supabase db push`,
-   poi esegui `supabase/seed.sql` nell'SQL editor (solo la prima volta).
-   In *Authentication → Providers* lascia attivo Email; disattiva le registrazioni pubbliche
-   (*Authentication → Settings → Allow new users to sign up: off*).
-2. **Admin**: `SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... npx tsx scripts/create-admin.ts email password`.
-3. **Vercel**: importa il repo; variabili d'ambiente:
+Il repo ha due workflow GitHub Actions:
+
+- **CI** (`.github/workflows/ci.yml`) — su ogni PR e push su `main`: lint, typecheck, test unitari,
+  Supabase locale in Docker con test di integrazione, Playwright e2e, build di produzione.
+- **Deploy database** (`.github/workflows/deploy-db.yml`) — su push su `main` che tocca
+  `supabase/migrations/**` (o manualmente da *Actions → Run workflow*): `supabase db push` sul progetto
+  di produzione. L'app è pubblicata da Vercel tramite l'integrazione Git.
+
+### Prima configurazione
+
+1. **Supabase**: crea un progetto; in *Project Settings → API* copia URL, anon key e service-role key;
+   in *Project Settings → General* copia il **Reference ID**. In *Authentication → Providers* lascia
+   attivo Email; disattiva le registrazioni pubbliche (*Authentication → Settings → Allow new users to
+   sign up: off*).
+2. **Segreti GitHub** (*Settings → Environments → `production` → Environment secrets*):
+   - `SUPABASE_ACCESS_TOKEN` — personal access token da https://supabase.com/dashboard/account/tokens
+   - `SUPABASE_DB_PASSWORD` — password del database del progetto
+   - `SUPABASE_PROJECT_ID` — il Reference ID
+   Poi lancia *Actions → Deploy database → Run workflow* per applicare le migrazioni la prima volta.
+3. **Seed**: esegui `supabase/seed.sql` nell'SQL editor (una sola volta; è idempotente).
+4. **Admin**: `SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... npx tsx scripts/create-admin.ts email password`.
+5. **Vercel**: *Add New → Project* → importa il repo GitHub (framework Next.js rilevato automaticamente).
+   Variabili d'ambiente di produzione:
    `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
-   `APP_BASE_URL` (es. `https://pasti.tuodominio.it`). Deploy.
-4. Apri `/admin`, accedi, crea le persone e distribuisci i link.
+   `APP_BASE_URL` (es. `https://pasti.tuodominio.it`, deve essere https). Ogni push su `main` va in
+   produzione; ogni PR ottiene un deploy di anteprima.
+6. Apri `/admin`, accedi, crea le persone e distribuisci i link.
 
 Non committare mai `.env.local` (o altri file `.env*.local`): contengono chiavi di servizio.
 
