@@ -48,7 +48,8 @@ Il repo ha due workflow GitHub Actions:
    - `SUPABASE_PROJECT_ID` — il Reference ID
    Poi lancia *Actions → Deploy database → Run workflow* per applicare le migrazioni la prima volta.
 3. **Seed**: esegui `supabase/seed.sql` nell'SQL editor (una sola volta; è idempotente).
-4. **Admin**: `SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... npx tsx scripts/create-admin.ts email password`.
+4. **Admin** (dal tuo computer, contro il progetto di produzione; le variabili esplicite hanno la precedenza su `.env.local`):
+   `SUPABASE_URL=https://<ref>.supabase.co SUPABASE_SERVICE_ROLE_KEY=<secret key> npx tsx scripts/create-admin.ts email password`
 5. **Vercel**: *Add New → Project* → importa il repo GitHub (framework Next.js rilevato automaticamente).
    Variabili d'ambiente di produzione:
    `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
