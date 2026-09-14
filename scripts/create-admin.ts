@@ -1,7 +1,18 @@
-import { createClient } from '@supabase/supabase-js'
+import { type SupabaseClient, createClient } from '@supabase/supabase-js'
 
 // Run with: npx tsx scripts/create-admin.ts <email> <password>
 // Wrapped in main() because the package is CommonJS (no top-level await under tsx).
+/** Walk every page of Auth users (listUsers is paginated) until the email is found. */
+async function findAuthUserByEmail(supa: SupabaseClient, email: string) {
+  for (let page = 1; ; page++) {
+    const { data, error } = await supa.auth.admin.listUsers({ page, perPage: 200 })
+    if (error) throw error
+    const hit = data.users.find((u) => u.email === email)
+    if (hit) return hit
+    if (data.users.length < 200) return undefined
+  }
+}
+
 async function main() {
   const [email, password] = process.argv.slice(2)
   if (!email || !password) {
@@ -19,9 +30,7 @@ async function main() {
   })
 
   // Idempotent: reuse an existing auth user with this email, then ensure the admins row.
-  const { data: list, error: listErr } = await supa.auth.admin.listUsers()
-  if (listErr) throw listErr
-  let user = list.users.find((u) => u.email === email)
+  let user = await findAuthUserByEmail(supa, email)
   if (!user) {
     const { data, error } = await supa.auth.admin.createUser({ email, password, email_confirm: true })
     if (error) throw error

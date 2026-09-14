@@ -21,10 +21,20 @@ const personSchema = z.object({
 export type PersonInput = z.input<typeof personSchema>
 
 function appBaseUrl(): string {
-  const url = process.env.APP_BASE_URL
-  if (url) return url
-  if (process.env.NODE_ENV === 'production') throw new Error('APP_BASE_URL is not set')
-  return 'http://localhost:3100'
+  const raw = process.env.APP_BASE_URL
+  const prod = process.env.NODE_ENV === 'production'
+  if (!raw) {
+    if (prod) throw new Error('APP_BASE_URL is not set')
+    return 'http://localhost:3100'
+  }
+  let url: URL
+  try {
+    url = new URL(raw)
+  } catch {
+    throw new Error('APP_BASE_URL is not a valid URL')
+  }
+  if (prod && url.protocol !== 'https:') throw new Error('APP_BASE_URL must use https in production')
+  return raw
 }
 
 async function reveal(id: string, token: string): Promise<Reveal> {

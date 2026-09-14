@@ -14,12 +14,13 @@ export interface Person {
 
 export async function findPersonByToken(token: string): Promise<Person | null> {
   if (!isTokenShape(token)) return null
-  const { data } = await db
+  const { data, error } = await db
     .from('persons')
     .select('id, full_name, group_name')
     .eq('token_hash', hashToken(token))
     .eq('active', true)
     .maybeSingle()
+  if (error) throw new Error(`persons lookup: ${error.message}`)
   return (data as Person | null) ?? null
 }
 
@@ -39,7 +40,8 @@ async function getAdminStatus(): Promise<{ user: { id: string; email: string | n
   const supa = await authClient()
   const { data: { user } } = await supa.auth.getUser()
   if (!user) return { user: null, admin: null }
-  const { data } = await db.from('admins').select('user_id').eq('user_id', user.id).maybeSingle()
+  const { data, error } = await db.from('admins').select('user_id').eq('user_id', user.id).maybeSingle()
+  if (error) throw new Error(`admins lookup: ${error.message}`)
   const admin = data ? { userId: user.id, email: user.email ?? null } : null
   return { user: { id: user.id, email: user.email ?? null }, admin }
 }

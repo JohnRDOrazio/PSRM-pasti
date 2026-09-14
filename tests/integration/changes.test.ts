@@ -192,3 +192,13 @@ describe('effective_presence and day_roster', () => {
     ])
   })
 })
+
+describe('supersession uses commit order (seq), not created_at', () => {
+  it('a later write with an earlier p_now still blocks undo of the earlier-committed change', async () => {
+    const p = await createPerson()
+    const first = await apply(p, '2026-10-20', 'lunch', '2026-10-20', 'lunch', false, { p_now: '2026-10-01T06:05:00Z' })
+    // Committed second, but carries an earlier timestamp (as if its transaction started first).
+    await apply(p, '2026-10-20', 'lunch', '2026-10-20', 'lunch', true, { p_now: '2026-10-01T06:00:00Z' })
+    expect(await rpc('undo_change', { p_change: first.change_id, p_person: p, p_now: '2026-10-01T06:10:00Z' })).toEqual({ error: 'superseded' })
+  })
+})

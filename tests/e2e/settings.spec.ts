@@ -1,5 +1,22 @@
 import { expect, test } from '@playwright/test'
+import postgres from 'postgres'
 import { E2E } from './global-setup'
+
+// The cutoff is shared state: capture it before the test and always put it back.
+let sql: ReturnType<typeof postgres>
+let originalDinnerCutoff: string
+
+test.beforeEach(async () => {
+  process.loadEnvFile('.env.local')
+  sql = postgres(process.env.DATABASE_URL!, { max: 1 })
+  const [row] = await sql`select value from settings where key = 'dinner_cutoff'`
+  originalDinnerCutoff = JSON.stringify(row.value)
+})
+
+test.afterEach(async () => {
+  await sql`update settings set value = ${originalDinnerCutoff}::jsonb where key = 'dinner_cutoff'`
+  await sql.end()
+})
 
 test('admin changes and restores the dinner cutoff', async ({ page }) => {
   await page.goto('/admin/login')

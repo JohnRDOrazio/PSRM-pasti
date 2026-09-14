@@ -15,3 +15,11 @@ describe('seasonSchema', () => {
     expect(seasonSchema.safeParse({ kind: 'recurring', label: 'X', start_md: '13-01', end_md: '09-30', lunch_default: true, dinner_default: true }).success).toBe(false)
   })
 })
+
+describe('isValidMd', () => {
+  it('rejects impossible month-days and accepts 02-29', () => {
+    expect(seasonSchema.safeParse({ kind: 'recurring', label: 'X', start_md: '02-31', end_md: '03-01', lunch_default: true, dinner_default: true }).success).toBe(false)
+    expect(seasonSchema.safeParse({ kind: 'recurring', label: 'X', start_md: '04-31', end_md: '05-01', lunch_default: true, dinner_default: true }).success).toBe(false)
+    expect(seasonSchema.safeParse({ kind: 'recurring', label: 'X', start_md: '02-29', end_md: '03-01', lunch_default: true, dinner_default: true }).success).toBe(true)
+  })
+})

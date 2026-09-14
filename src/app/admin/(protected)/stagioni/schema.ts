@@ -1,7 +1,14 @@
 import { z } from 'zod'
 import { isoDateSchema } from '@/app/api/choices/schema'
 
-const md = z.string().regex(/^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/, 'MM-DD')
+/** 'MM-DD' that exists in a leap year (so 02-29 is allowed, 02-31 / 04-31 are not). */
+export function isValidMd(s: string): boolean {
+  if (!/^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(s)) return false
+  const [m, d] = s.split('-').map(Number)
+  const dt = new Date(Date.UTC(2024, m - 1, d))
+  return dt.getUTCMonth() === m - 1 && dt.getUTCDate() === d
+}
+const md = z.string().refine(isValidMd, 'MM-DD')
 const common = { label: z.string().trim().min(1).max(60), lunch_default: z.boolean(), dinner_default: z.boolean() }
 
 export const seasonSchema = z.discriminatedUnion('kind', [

@@ -24,19 +24,21 @@ export default async function globalSetup() {
 
   const { data: list, error: listErr } = await supa.auth.admin.listUsers()
   if (listErr) throw listErr
-  let user = list.users.find((u) => u.email === E2E.adminEmail)
-  if (!user) {
-    const { data, error } = await supa.auth.admin.createUser({ email: E2E.adminEmail, password: E2E.adminPassword, email_confirm: true })
+  // Ensure each auth user exists with the declared password (re-sync existing ones every run).
+  async function ensureUser(email: string, password: string) {
+    const existing = list.users.find((u) => u.email === email)
+    if (existing) {
+      const { error } = await supa.auth.admin.updateUserById(existing.id, { password, email_confirm: true })
+      if (error) throw error
+      return existing
+    }
+    const { data, error } = await supa.auth.admin.createUser({ email, password, email_confirm: true })
     if (error) throw error
-    user = data.user
+    return data.user
   }
+  const user = await ensureUser(E2E.adminEmail, E2E.adminPassword)
   await sql`insert into admins (user_id) values (${user.id}) on conflict do nothing`
-
-  const hasNonAdmin = list.users.some((u) => u.email === E2E.nonAdminEmail)
-  if (!hasNonAdmin) {
-    const { error } = await supa.auth.admin.createUser({ email: E2E.nonAdminEmail, password: E2E.nonAdminPassword, email_confirm: true })
-    if (error) throw error
-  }
+  await ensureUser(E2E.nonAdminEmail, E2E.nonAdminPassword)
 
   await sql.end()
 }

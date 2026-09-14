@@ -14,6 +14,7 @@ export function GuestStepper({ date, meal, count: initial, note: initialNote }: 
   const { msg, show } = useToast()
 
   function save(next: number, nextNote = note) {
+    if (pending) return // one upsert at a time per (date, meal); controls are disabled meanwhile
     setCount(next)
     start(async () => {
       try {
@@ -40,6 +41,7 @@ export function GuestStepper({ date, meal, count: initial, note: initialNote }: 
         value={note}
         onChange={(e) => setNote(e.target.value)}
         onBlur={() => count > 0 && save(count, note)}
+        disabled={pending}
         className="min-w-40 flex-1 rounded border px-2 py-1"
       />
       <Toast msg={msg} />

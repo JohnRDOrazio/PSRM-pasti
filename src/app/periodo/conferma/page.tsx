@@ -15,21 +15,23 @@ export default async function ConfirmPage({ searchParams }: { searchParams: Prom
   const { c } = await searchParams
   if (!c) notFound()
 
-  const { data: change } = await db
+  const { data: change, error: changeErr } = await db
     .from('changes')
     .select('id, start_date, start_meal, end_date, end_meal, state, undone_by')
     .eq('id', c)
     .eq('person_id', person.id)
     .maybeSingle()
+  if (changeErr) throw new Error(changeErr.message)
   if (!change) notFound()
 
-  const { data: entries } = await db
+  const { data: entries, error: entriesErr } = await db
     .from('change_entries')
     .select('date, meal, prev_present')
     .eq('change_id', change.id)
     .not('prev_present', 'is', null)
     .order('date')
     .order('meal')
+  if (entriesErr) throw new Error(entriesErr.message)
   const overwritten = (entries ?? []) as { date: IsoDate; meal: Meal; prev_present: boolean }[]
   const cells = expandInterval(change.start_date, change.start_meal, change.end_date, change.end_meal)
 

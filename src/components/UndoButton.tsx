@@ -3,29 +3,34 @@ import { useState } from 'react'
 import { t } from '@/i18n/it'
 
 export function UndoButton({ changeId }: { changeId: string }) {
-  const [result, setResult] = useState<string | null>(null)
+  const [done, setDone] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   async function undo() {
     if (busy) return
     setBusy(true)
+    setError(null)
     try {
       const res = await fetch(`/api/changes/${changeId}/undo`, { method: 'POST' })
       if (res.ok) {
-        setResult(t.period.undone)
+        setDone(true)
         return
       }
       const body = (await res.json().catch(() => ({}))) as { error?: string }
-      setResult(t.period.undoReason[body.error ?? ''] ?? t.genericError)
+      setError(t.period.undoReason[body.error ?? ''] ?? t.genericError)
     } catch {
-      setResult(t.genericError)
+      setError(t.genericError)
     } finally {
       setBusy(false)
     }
   }
-  if (result) return <p role="status" className="rounded-lg bg-neutral-100 p-3 text-sm">{result}</p>
+  if (done) return <p role="status" className="rounded-lg bg-neutral-100 p-3 text-sm">{t.period.undone}</p>
   return (
-    <button type="button" onClick={undo} disabled={busy} className="w-full rounded-full border-2 border-neutral-400 py-3 font-semibold">
-      {t.period.undo}
-    </button>
+    <div className="space-y-2">
+      {error && <p role="status" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+      <button type="button" onClick={undo} disabled={busy} className="w-full rounded-full border-2 border-neutral-400 py-3 font-semibold disabled:opacity-40">
+        {t.period.undo}
+      </button>
+    </div>
   )
 }

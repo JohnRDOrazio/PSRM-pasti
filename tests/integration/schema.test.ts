@@ -78,3 +78,15 @@ describe('RLS', () => {
     expect(rows.map((r) => r.relname)).toEqual([])
   })
 })
+
+describe('season_defaults MM-DD validity', () => {
+  it.each(['02-31', '04-31', '06-31'])('rejects impossible %s', async (md) => {
+    await expect(
+      sql`insert into season_defaults (label, start_md, end_md, lunch_default, dinner_default) values ('x', ${md}, '12-31', true, true)`,
+    ).rejects.toThrow(/season_defaults_md_valid/)
+  })
+  it('accepts 02-29 (leap-day boundary)', async () => {
+    await sql`insert into season_defaults (label, start_md, end_md, lunch_default, dinner_default) values ('leap', '02-29', '03-01', true, true)`
+    await sql`delete from season_defaults where label = 'leap'`
+  })
+})
