@@ -41,7 +41,8 @@ Il repo ha due workflow GitHub Actions:
 1. **Supabase**: crea un progetto; in *Project Settings → API* copia URL, anon key e service-role key;
    in *Project Settings → General* copia il **Reference ID**. In *Authentication → Providers* lascia
    attivo Email; disattiva le registrazioni pubbliche (*Authentication → Settings → Allow new users to
-   sign up: off*).
+   sign up: off*). Sempre in *Authentication → Settings* imposta **Minimum password length: 8** e attiva
+   **Secure password change** (come in `supabase/config.toml`, che vale solo per lo stack locale).
 2. **Segreti GitHub** (*Settings → Environments → `production` → Environment secrets*):
    - `SUPABASE_ACCESS_TOKEN` — personal access token da https://supabase.com/dashboard/account/tokens
    - `SUPABASE_DB_PASSWORD` — password del database del progetto
@@ -55,7 +56,8 @@ Il repo ha due workflow GitHub Actions:
    `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
    `APP_BASE_URL` (es. `https://pasti.tuodominio.it`, deve essere https). Ogni push su `main` va in
    produzione; ogni PR ottiene un deploy di anteprima.
-6. Apri `/admin`, accedi, crea le persone e distribuisci i link.
+6. Apri `/admin`, accedi, crea le persone e distribuisci i link. Ogni amministratore può cambiare la propria
+   password da *Password* nel menu; se la dimentica, rilancia `scripts/create-admin.ts` con la stessa email.
 
 Non committare mai `.env.local` (o altri file `.env*.local`): contengono chiavi di servizio.
 
