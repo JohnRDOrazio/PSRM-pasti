@@ -247,11 +247,11 @@ otp_expiry = 3600
 # subject = "You have been invited"
 # content_path = "./supabase/templates/invite.html"
 
-# Recovery e-mail links to our own page with the token hash (server-side auth pattern).
-# Production: set the same template in the dashboard (see README).
-[auth.email.template.recovery]
-subject = "PSRM Pasti: reimposta la password"
-content_path = "./supabase/templates/recovery.html"
+# The stock recovery template (link to /auth/v1/verify → redirect_to with ?code=) is what production
+# uses without custom SMTP. With custom SMTP you may switch to supabase/templates/recovery.html:
+# [auth.email.template.recovery]
+# subject = "PSRM Pasti: reimposta la password"
+# content_path = "./supabase/templates/recovery.html"
 
 # Uncomment to customize notification email template
 # [auth.email.notification.password_changed]
