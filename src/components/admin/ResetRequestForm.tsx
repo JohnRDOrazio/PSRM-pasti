@@ -19,8 +19,9 @@ export function ResetRequestForm() {
       const supa = createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
       // The e-mail template links to /admin/reset/nuova?token_hash=…&type=recovery (see README).
       const { error } = await supa.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/admin/reset/nuova` })
-      // Never reveal whether the address exists; only infrastructure errors (e.g. rate limit) surface.
-      if (error && error.status !== 400 && error.status !== 422) setError(t.genericError)
+      // GoTrue answers 200 for unknown addresses, so a neutral message never reveals whether one exists;
+      // any error here is a real one (malformed e-mail, rate limit, network).
+      if (error) setError(t.genericError)
       else setSent(true)
     } catch {
       setError(t.genericError)

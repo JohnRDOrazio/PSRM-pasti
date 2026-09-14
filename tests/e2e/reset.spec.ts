@@ -40,13 +40,13 @@ test('forgot-password link leads to the request page, which never reveals whethe
 
 test('recovery link lets the admin set a new password and log in with it', async ({ page }) => {
   const tokenHash = await recoveryTokenHash(E2E.adminEmail)
-  await page.goto(`/admin/reset/nuova?token_hash=${tokenHash}&type=recovery`)
-  await page.getByLabel('Nuova password', { exact: true }).fill(RECOVERED_PASSWORD)
-  await page.getByLabel('Conferma nuova password').fill(RECOVERED_PASSWORD)
-  await page.getByRole('button', { name: 'Aggiorna password' }).click()
-  await expect(page.getByText('Password aggiornata.')).toBeVisible()
-
   try {
+    await page.goto(`/admin/reset/nuova?token_hash=${tokenHash}&type=recovery`)
+    await page.getByLabel('Nuova password', { exact: true }).fill(RECOVERED_PASSWORD)
+    await page.getByLabel('Conferma nuova password').fill(RECOVERED_PASSWORD)
+    await page.getByRole('button', { name: 'Aggiorna password' }).click()
+    await expect(page.getByText('Password aggiornata.')).toBeVisible()
+
     await page.getByRole('link', { name: 'Vai alla cucina' }).click()
     await expect(page).toHaveURL(/\/admin$/)
     await page.getByRole('button', { name: 'Esci' }).click()
@@ -57,9 +57,13 @@ test('recovery link lets the admin set a new password and log in with it', async
     await expect(page).toHaveURL(/\/admin$/)
   } finally {
     // Restore the shared e2e admin password (global setup also re-syncs it on the next run).
-    const { data: list } = await serviceClient().auth.admin.listUsers({ perPage: 200 })
-    const user = list.users.find((u) => u.email === E2E.adminEmail)!
-    await serviceClient().auth.admin.updateUserById(user.id, { password: E2E.adminPassword })
+    const supa = serviceClient()
+    const { data: list, error: listErr } = await supa.auth.admin.listUsers({ perPage: 200 })
+    if (listErr) throw listErr
+    const user = list.users.find((u) => u.email === E2E.adminEmail)
+    if (!user) throw new Error('e2e admin user not found during cleanup')
+    const { error } = await supa.auth.admin.updateUserById(user.id, { password: E2E.adminPassword })
+    if (error) throw error
   }
 })
 

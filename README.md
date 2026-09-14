@@ -44,8 +44,8 @@ Il repo ha due workflow GitHub Actions:
    sign up: off*). Sempre in *Authentication → Settings* imposta **Minimum password length: 8** e attiva
    **Secure password change** (come in `supabase/config.toml`, che vale solo per lo stack locale).
    Per il recupero password via email: in *Authentication → URL Configuration* imposta **Site URL** =
-   `https://psrm-pasti.vercel.app` (il tuo dominio) e aggiungi `https://psrm-pasti.vercel.app/admin/reset/nuova`
-   ai **Redirect URLs**; in *Authentication → Emails → Reset Password* sostituisci il corpo con il contenuto di
+   `https://<dominio-dell-app>` (l'origine con cui gli utenti aprono l'app, la stessa di `APP_BASE_URL`) e aggiungi
+   `https://<dominio-dell-app>/admin/reset/nuova` ai **Redirect URLs**; in *Authentication → Emails → Reset Password* sostituisci il corpo con il contenuto di
    `supabase/templates/recovery.html` (il link usa `{{ .TokenHash }}`, non `{{ .ConfirmationURL }}`).
    Gli amministratori devono avere un indirizzo email reale per poter ricevere il link.
 2. **Segreti GitHub** (*Settings → Environments → `production` → Environment secrets*):
