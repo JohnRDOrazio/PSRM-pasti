@@ -1,4 +1,5 @@
 import 'server-only'
+import { cache } from 'react'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { MEMBER_COOKIE } from '@/lib/cookie'
@@ -36,7 +37,9 @@ export interface Admin {
   email: string | null
 }
 
-async function getAdminStatus(): Promise<{ user: { id: string; email: string | null } | null; admin: Admin | null }> {
+// Memoised per request: the layout and the page both call requireAdmin(), and each getUser() is a
+// round-trip to Supabase Auth.
+const getAdminStatus = cache(async (): Promise<{ user: { id: string; email: string | null } | null; admin: Admin | null }> => {
   const supa = await authClient()
   const { data: { user } } = await supa.auth.getUser()
   if (!user) return { user: null, admin: null }
@@ -44,7 +47,7 @@ async function getAdminStatus(): Promise<{ user: { id: string; email: string | n
   if (error) throw new Error(`admins lookup: ${error.message}`)
   const admin = data ? { userId: user.id, email: user.email ?? null } : null
   return { user: { id: user.id, email: user.email ?? null }, admin }
-}
+})
 
 export async function getAdmin(): Promise<Admin | null> {
   const { admin } = await getAdminStatus()

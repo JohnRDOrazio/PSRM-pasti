@@ -104,7 +104,8 @@ export function SeasonsEditor({ rows }: { rows: SeasonListRow[] }) {
         </form>
       )}
 
-      <table className="w-full rounded-xl bg-white text-sm shadow-sm">
+      <div className="overflow-x-auto rounded-xl bg-white shadow-sm">
+      <table className="w-full text-sm">
         <thead className="bg-neutral-100 text-left">
           <tr><th className="p-2">{S.label}</th><th className="p-2">{S.period}</th><th className="p-2">{S.lunchDefault}</th><th className="p-2">{S.dinnerDefault}</th><th className="p-2"></th></tr>
         </thead>
@@ -129,6 +130,7 @@ export function SeasonsEditor({ rows }: { rows: SeasonListRow[] }) {
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   )
 }

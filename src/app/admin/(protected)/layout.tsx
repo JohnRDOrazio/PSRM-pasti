@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import { NavLink } from '@/components/admin/NavLink'
 import { t } from '@/i18n/it'
 import { requireAdmin } from '@/server/auth'
 import { signOut } from './actions'
@@ -19,7 +19,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <nav className="no-print flex flex-wrap items-center gap-4 border-b bg-white px-4 py-3 text-sm">
         <span className="font-semibold">{t.appName}</span>
         {NAV.map(([href, label]) => (
-          <Link key={href} href={href} className="text-blue-800 hover:underline">{label}</Link>
+          <NavLink key={href} href={href} label={label} />
         ))}
         <form action={signOut} className="ml-auto">
           <button type="submit" className="text-neutral-600 hover:underline">{t.admin.logout}</button>
