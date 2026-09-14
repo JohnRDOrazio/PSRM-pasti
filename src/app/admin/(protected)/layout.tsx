@@ -9,6 +9,7 @@ const NAV = [
   ['/admin/stagioni', t.admin.nav.seasons],
   ['/admin/impostazioni', t.admin.nav.settings],
   ['/admin/registro', t.admin.nav.log],
+  ['/admin/password', t.admin.nav.password],
 ] as const
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
