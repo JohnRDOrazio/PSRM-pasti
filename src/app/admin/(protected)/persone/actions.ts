@@ -16,7 +16,8 @@ export interface Reveal {
 
 const personSchema = z.object({
   full_name: z.string().trim().min(1).max(120),
-  group_name: z.string().trim().max(60).optional().transform((v) => v || null),
+  // The form sends '' for "no group".
+  group_id: z.string().transform((v) => v || null).pipe(z.uuid().nullable()),
   dietary_notes: dietaryNotesSchema,
 })
 export type PersonInput = z.input<typeof personSchema>

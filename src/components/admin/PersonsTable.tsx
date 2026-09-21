@@ -7,6 +7,7 @@ import { formatDateTime, t } from '@/i18n/it'
 export interface PersonRow {
   id: string
   full_name: string
+  group_id: string | null
   group_name: string | null
   dietary_notes: string | null
   active: boolean
@@ -14,9 +15,14 @@ export interface PersonRow {
   change_count: number
 }
 
+export interface GroupOption {
+  id: string
+  name: string
+}
+
 const P = t.admin.persons
 
-export function PersonsTable({ rows }: { rows: PersonRow[] }) {
+export function PersonsTable({ rows, groups }: { rows: PersonRow[]; groups: GroupOption[] }) {
   const router = useRouter()
   const [pending, start] = useTransition()
   const [editing, setEditing] = useState<PersonRow | 'new' | null>(null)
@@ -45,7 +51,7 @@ export function PersonsTable({ rows }: { rows: PersonRow[] }) {
     const fd = new FormData(e.currentTarget)
     const input: PersonInput = {
       full_name: String(fd.get('full_name') ?? ''),
-      group_name: String(fd.get('group_name') ?? ''),
+      group_id: String(fd.get('group_id') ?? ''),
       dietary_notes: String(fd.get('dietary_notes') ?? ''),
     }
     run(async () => {
@@ -97,7 +103,10 @@ export function PersonsTable({ rows }: { rows: PersonRow[] }) {
           </label>
           <label className="block text-sm">
             {P.group}
-            <input name="group_name" maxLength={60} defaultValue={editing === 'new' ? '' : editing.group_name ?? ''} className="mt-1 w-full rounded border p-2" />
+            <select name="group_id" defaultValue={editing === 'new' ? '' : editing.group_id ?? ''} className="mt-1 w-full rounded border p-2">
+              <option value="">{P.noGroup}</option>
+              {groups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
+            </select>
           </label>
           <label className="block text-sm">
             {P.dietaryNotes}

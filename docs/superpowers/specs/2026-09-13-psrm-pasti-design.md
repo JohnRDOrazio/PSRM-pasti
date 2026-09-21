@@ -66,11 +66,15 @@ All timestamps are `timestamptz`; calendar days are `date`.
 ```
 persons          id uuid pk
                  full_name text not null
-                 group_name text null            -- e.g. Sacerdoti, Seminaristi, Suore, Ospiti
-                 notes text null
+                 group_id uuid null references groups on delete restrict   -- since 2026-09-21
+                 dietary_notes text null         -- since 2026-09-21 (was `notes`)
                  active bool not null default true
                  token_hash text unique not null
                  created_at, updated_at
+
+groups           id uuid pk                      -- since 2026-09-21, see 2026-09-21-groups-design.md
+                 name text not null              -- unique on lower(name)
+                 created_at
 
 admins           user_id uuid pk references auth.users
                  created_at

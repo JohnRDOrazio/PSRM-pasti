@@ -11,7 +11,7 @@ test('admin creates a person, gets a one-time link, and the member can open it',
 
   await page.getByRole('button', { name: 'Nuova persona' }).click()
   await page.getByLabel('Nome e cognome').fill('Giulia Verdi')
-  await page.getByLabel('Gruppo').fill('Suore')
+  await page.getByLabel('Gruppo').selectOption({ label: 'Ospiti' })
   await page.getByRole('button', { name: 'Salva' }).click()
 
   const reveal = page.getByTestId('reveal')

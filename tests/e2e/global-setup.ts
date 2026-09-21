@@ -18,8 +18,9 @@ export default async function globalSetup() {
     auth: { persistSession: false, autoRefreshToken: false },
   })
 
-  await sql`truncate change_entries, meal_choices, changes, meal_guests, persons cascade`
-  await sql`insert into persons (full_name, group_name, token_hash) values (${E2E.memberName}, 'Ospiti', ${hashToken(E2E.memberToken)})`
+  await sql`truncate change_entries, meal_choices, changes, meal_guests, persons, groups cascade`
+  const [group] = await sql`insert into groups (name) values ('Ospiti') returning id`
+  await sql`insert into persons (full_name, group_id, token_hash) values (${E2E.memberName}, ${group.id}, ${hashToken(E2E.memberToken)})`
   await sql`update settings set value = '"10:00"' where key in ('lunch_cutoff', 'dinner_cutoff')`
 
   // listUsers is paginated: walk every page before concluding the user is missing.

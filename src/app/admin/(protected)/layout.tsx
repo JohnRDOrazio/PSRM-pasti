@@ -6,6 +6,7 @@ import { signOut } from './actions'
 const NAV = [
   ['/admin', t.admin.nav.kitchen],
   ['/admin/persone', t.admin.nav.persons],
+  ['/admin/gruppi', t.admin.nav.groups],
   ['/admin/stagioni', t.admin.nav.seasons],
   ['/admin/impostazioni', t.admin.nav.settings],
   ['/admin/registro', t.admin.nav.log],
