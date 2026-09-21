@@ -8,11 +8,16 @@ create table groups (
 create unique index groups_name_key on groups (lower(name));
 alter table groups enable row level security;
 
+-- One group per case-insensitive name (the unique index is on lower(name)); the alphabetically
+-- first spelling wins, and every case variant is linked to it.
 insert into groups (name)
-  select distinct group_name from persons where group_name is not null;
+  select distinct on (lower(group_name)) group_name
+    from persons
+   where group_name is not null
+   order by lower(group_name), group_name;
 
 alter table persons add column group_id uuid references groups(id) on delete restrict;
-update persons p set group_id = g.id from groups g where g.name = p.group_name;
+update persons p set group_id = g.id from groups g where lower(g.name) = lower(p.group_name);
 create index persons_group_id_idx on persons (group_id);
 
 -- Views and functions keep exposing group_name, now through the join. persons_overview depends
