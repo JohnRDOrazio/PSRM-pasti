@@ -35,8 +35,10 @@ Migration `20260921000002_groups.sql`, in one transaction:
    from `persons p left join groups g on g.id = p.group_id`.
 6. drop + recreate `day_roster` with the same return type as today; `group_name` comes from the
    join; ordering stays `group_name nulls last, full_name`.
-7. `revoke all on groups from public, anon, authenticated` (defaults already revoke, the
-   explicit line matches the other tables).
+7. create view `groups_overview` (`security_invoker = false`): `id, name, member_count`
+   (`count(p.id)` over `persons`), ordered by callers with `lower(name)`.
+8. `revoke all on groups, groups_overview from public, anon, authenticated` (defaults already
+   revoke, the explicit line matches the other tables).
 
 Not additive: like the dietary-notes migration, merge in a quiet moment (the production app and
 the migration deploy independently for a minute or two).
@@ -95,5 +97,5 @@ No change: `day_roster` keeps returning `group_name`; `summarise`/`OTHER_GROUP` 
   name → renames the group to "Seminario" → kitchen shows the new name → *Elimina* is disabled
   while in use → unassign the member ("— nessuno —") → delete works. Duplicate name shows the
   message.
-- Existing specs keep passing (`persons.spec.ts` fills "Gruppo" by typing "Suore": it will select
-  a group instead, so the setup creates "Suore", or the spec creates it first).
+- Existing specs keep passing: `persons.spec.ts` currently types "Suore" into "Gruppo"; it will
+  select "Ospiti" instead (the group `global-setup.ts` already creates for the E2E member).
