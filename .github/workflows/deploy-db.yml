@@ -1,8 +1,9 @@
 name: Deploy database
 
 # Applies supabase/migrations to the production Supabase project.
-# The app itself is deployed by Vercel's Git integration; migrations are additive,
-# so the two can run independently.
+# The app itself is deployed by Vercel's Git integration, so the two run independently:
+# a migration that renames or drops something the old code reads causes errors for the minute
+# or two until both are live. Merge such PRs in a quiet moment.
 on:
   push:
     branches: [main]

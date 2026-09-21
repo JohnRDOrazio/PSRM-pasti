@@ -17,13 +17,23 @@ export const supa = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE
 
 /** Empties every data table; keeps seeded seasons/settings. */
 export async function resetData(): Promise<void> {
-  await sql`truncate change_entries, meal_choices, changes, meal_guests, persons cascade`
+  await sql`truncate change_entries, meal_choices, changes, meal_guests, persons, groups cascade`
+}
+
+/** Finds or creates a group by name. */
+export async function ensureGroup(name: string): Promise<string> {
+  const [row] = await sql`
+    insert into groups (name) values (${name})
+    on conflict (lower(name)) do update set name = excluded.name
+    returning id`
+  return row.id as string
 }
 
 export async function createPerson(name = 'Test Person', group: string | null = null): Promise<string> {
+  const groupId = group ? await ensureGroup(group) : null
   const [row] = await sql`
-    insert into persons (full_name, group_name, token_hash)
-    values (${name}, ${group}, ${crypto.randomUUID()})
+    insert into persons (full_name, group_id, token_hash)
+    values (${name}, ${groupId}, ${crypto.randomUUID()})
     returning id`
   return row.id as string
 }

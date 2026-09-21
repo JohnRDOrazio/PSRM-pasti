@@ -17,7 +17,7 @@ export interface Person {
 export async function findPersonByToken(token: string): Promise<Person | null> {
   if (!isTokenShape(token)) return null
   const { data, error } = await db
-    .from('persons')
+    .from('persons_overview')
     .select('id, full_name, group_name, dietary_notes')
     .eq('token_hash', hashToken(token))
     .eq('active', true)

@@ -133,7 +133,7 @@ export const t = {
     },
     notAdmin: 'Questo account non è abilitato come amministratore.',
     logout: 'Esci',
-    nav: { kitchen: 'Cucina', persons: 'Persone', seasons: 'Stagioni', settings: 'Impostazioni', log: 'Registro', password: 'Password' },
+    nav: { kitchen: 'Cucina', persons: 'Persone', groups: 'Gruppi', seasons: 'Stagioni', settings: 'Impostazioni', log: 'Registro', password: 'Password' },
     changePassword: {
       title: 'Cambia password',
       current: 'Password attuale',
@@ -169,6 +169,7 @@ export const t = {
       new: 'Nuova persona',
       name: 'Nome e cognome',
       group: 'Gruppo',
+      noGroup: '— nessuno —',
       dietaryNotes: 'Note alimentari',
       active: 'Attivo',
       inactive: 'Disattivato',
@@ -183,6 +184,16 @@ export const t = {
       qr: 'QR',
       linkOnce: 'Questo link è visibile solo ora: copialo o mostra il QR.',
       cannotDelete: 'Ha delle modifiche registrate: puoi solo disattivarla.',
+    },
+    groups: {
+      title: 'Gruppi',
+      add: 'Nuovo gruppo',
+      name: 'Nome',
+      members: 'Persone',
+      none: 'Nessun gruppo.',
+      duplicate: 'Esiste già un gruppo con questo nome.',
+      inUse: 'Ci sono persone in questo gruppo: spostale prima di eliminarlo.',
+      hint: 'I gruppi compaiono nella scheda di ogni persona e nei conteggi della cucina.',
     },
     seasons: {
       title: 'Stagioni',
