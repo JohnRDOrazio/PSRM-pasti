@@ -4,6 +4,7 @@ export interface RosterRow {
   person_id: string
   full_name: string
   group_name: string | null
+  dietary_notes: string | null
   lunch_present: boolean
   lunch_explicit: boolean
   dinner_present: boolean
@@ -30,4 +31,13 @@ export function summarise(roster: RosterRow[], meal: Meal): { total: number; byG
     groups.set(g, (groups.get(g) ?? 0) + 1)
   }
   return { total, byGroup: [...groups.entries()] }
+}
+
+export type DietaryNote = Pick<RosterRow, 'person_id' | 'full_name'> & { dietary_notes: string }
+
+/** People present at a meal who have a dietary note (allergies, intolerances…), in roster order. */
+export function dietaryNotes(roster: RosterRow[], meal: Meal): DietaryNote[] {
+  return roster
+    .filter((r): r is RosterRow & { dietary_notes: string } => isPresent(r, meal) && !!r.dietary_notes)
+    .map((r) => ({ person_id: r.person_id, full_name: r.full_name, dietary_notes: r.dietary_notes }))
 }

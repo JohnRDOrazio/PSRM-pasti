@@ -5,7 +5,7 @@ import { AdminToggle } from '@/components/admin/AdminToggle'
 import { GuestStepper } from '@/components/admin/GuestStepper'
 import { requireAdmin } from '@/server/auth'
 import { db } from '@/server/db'
-import { type RosterRow, isExplicit, isPresent, summarise } from './kitchen.logic'
+import { type RosterRow, dietaryNotes, isExplicit, isPresent, summarise } from './kitchen.logic'
 
 interface GuestRow { meal: Meal; count: number; note: string | null }
 
@@ -58,6 +58,7 @@ export default async function KitchenPage({ searchParams }: { searchParams: Prom
           const guestCount = g?.count ?? 0
           const defaultPresent = defaults[meal]
           const listed = roster.filter((r) => isPresent(r, meal) !== defaultPresent)
+          const notes = dietaryNotes(roster, meal)
           return (
             <section key={meal} className="rounded-xl bg-white p-4 shadow-sm" data-testid={`meal-${meal}`}>
               <h2 className="text-xl font-semibold">{mealName[meal]}</h2>
@@ -85,6 +86,20 @@ export default async function KitchenPage({ searchParams }: { searchParams: Prom
                   </li>
                 ))}
               </ul>
+
+              {notes.length > 0 && (
+                <div data-testid={`dietary-notes-${meal}`} className="mt-4">
+                  <h3 className="font-medium">{t.admin.kitchen.dietaryNotes} ({notes.length})</h3>
+                  <dl className="mt-2 divide-y text-sm">
+                    {notes.map((n) => (
+                      <div key={n.person_id} className="py-1">
+                        <dt className="inline font-medium">{n.full_name}</dt>
+                        <dd className="inline text-neutral-600"> — {n.dietary_notes}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+              )}
             </section>
           )
         })}

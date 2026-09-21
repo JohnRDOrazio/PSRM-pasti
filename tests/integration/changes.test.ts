@@ -187,8 +187,8 @@ describe('effective_presence and day_roster', () => {
     await apply(a, '2026-10-20', 'lunch', '2026-10-20', 'lunch', false)
     const rows = await rpc('day_roster', { p_date: '2026-10-20' })
     expect(rows).toEqual([
-      { person_id: b, full_name: 'Bruno', group_name: 'Sacerdoti', lunch_present: true, lunch_explicit: false, dinner_present: true, dinner_explicit: false },
-      { person_id: a, full_name: 'Anna', group_name: 'Suore', lunch_present: false, lunch_explicit: true, dinner_present: true, dinner_explicit: false },
+      { person_id: b, full_name: 'Bruno', group_name: 'Sacerdoti', dietary_notes: null, lunch_present: true, lunch_explicit: false, dinner_present: true, dinner_explicit: false },
+      { person_id: a, full_name: 'Anna', group_name: 'Suore', dietary_notes: null, lunch_present: false, lunch_explicit: true, dinner_present: true, dinner_explicit: false },
     ])
   })
 })

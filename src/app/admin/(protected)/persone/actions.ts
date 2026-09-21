@@ -2,6 +2,7 @@
 import { revalidatePath } from 'next/cache'
 import QRCode from 'qrcode'
 import { z } from 'zod'
+import { dietaryNotesSchema } from '@/app/api/notes/schema'
 import { requireAdmin } from '@/server/auth'
 import { db } from '@/server/db'
 import { generateToken, hashToken, personLink } from '@/server/token'
@@ -16,7 +17,7 @@ export interface Reveal {
 const personSchema = z.object({
   full_name: z.string().trim().min(1).max(120),
   group_name: z.string().trim().max(60).optional().transform((v) => v || null),
-  notes: z.string().trim().max(500).optional().transform((v) => v || null),
+  dietary_notes: dietaryNotesSchema,
 })
 export type PersonInput = z.input<typeof personSchema>
 

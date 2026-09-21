@@ -7,7 +7,7 @@ export default async function PersonsPage() {
   await requireAdmin()
   const { data, error } = await db
     .from('persons_overview')
-    .select('id, full_name, group_name, notes, active, last_change_at, change_count')
+    .select('id, full_name, group_name, dietary_notes, active, last_change_at, change_count')
     .order('active', { ascending: false })
     .order('full_name')
   if (error) throw new Error(error.message)

@@ -75,6 +75,12 @@ export const t = {
     lockedError: 'Questo pasto è già chiuso alle modifiche.',
     markPeriod: 'Segna un periodo',
     explicitHint: 'Il puntino indica una scelta diversa dal periodo.',
+    notes: {
+      title: 'Note alimentari',
+      hint: 'Allergie, intolleranze o altre esigenze: la cucina le vede.',
+      empty: 'Nessuna nota.',
+      placeholder: 'Es. celiachia, intolleranza al lattosio…',
+    },
   },
   period: {
     title: 'Segna un periodo',
@@ -156,13 +162,14 @@ export const t = {
       defaultPresent: 'periodo a presenza predefinita',
       defaultAbsent: 'periodo ad assenza predefinita',
       print: 'Stampa',
+      dietaryNotes: 'Note alimentari',
     },
     persons: {
       title: 'Persone',
       new: 'Nuova persona',
       name: 'Nome e cognome',
       group: 'Gruppo',
-      notes: 'Note',
+      dietaryNotes: 'Note alimentari',
       active: 'Attivo',
       inactive: 'Disattivato',
       status: 'Stato',

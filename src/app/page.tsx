@@ -7,6 +7,7 @@ import { getPersonFromCookie } from '@/server/auth'
 import { db } from '@/server/db'
 import { getSettings } from '@/server/settings'
 import { type DayRow, DayList } from '@/components/DayList'
+import { NotesEditor } from '@/components/NotesEditor'
 
 interface PresenceRow {
   date: IsoDate
@@ -42,6 +43,7 @@ export default async function HomePage() {
         <p className="mt-2 rounded-lg bg-blue-50 p-3 text-sm text-blue-900">
           {seasonPresent ? t.member.seasonPresent : t.member.seasonAbsent} {t.member.explicitHint}
         </p>
+        <NotesEditor initial={person.dietary_notes} />
       </header>
       <DayList rows={rows} cutoffs={{ lunch: settings.lunch_cutoff, dinner: settings.dinner_cutoff }} />
       <div className="fixed inset-x-0 bottom-0 bg-gradient-to-t from-neutral-50 p-4">
