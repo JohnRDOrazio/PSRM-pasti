@@ -8,7 +8,7 @@ export interface PersonRow {
   id: string
   full_name: string
   group_name: string | null
-  notes: string | null
+  dietary_notes: string | null
   active: boolean
   last_change_at: string | null
   change_count: number
@@ -46,7 +46,7 @@ export function PersonsTable({ rows }: { rows: PersonRow[] }) {
     const input: PersonInput = {
       full_name: String(fd.get('full_name') ?? ''),
       group_name: String(fd.get('group_name') ?? ''),
-      notes: String(fd.get('notes') ?? ''),
+      dietary_notes: String(fd.get('dietary_notes') ?? ''),
     }
     run(async () => {
       if (editing === 'new') setReveal(await createPerson(input))
@@ -100,8 +100,8 @@ export function PersonsTable({ rows }: { rows: PersonRow[] }) {
             <input name="group_name" maxLength={60} defaultValue={editing === 'new' ? '' : editing.group_name ?? ''} className="mt-1 w-full rounded border p-2" />
           </label>
           <label className="block text-sm">
-            {P.notes}
-            <input name="notes" maxLength={500} defaultValue={editing === 'new' ? '' : editing.notes ?? ''} className="mt-1 w-full rounded border p-2" />
+            {P.dietaryNotes}
+            <input name="dietary_notes" maxLength={500} defaultValue={editing === 'new' ? '' : editing.dietary_notes ?? ''} className="mt-1 w-full rounded border p-2" />
           </label>
           <div className="flex gap-2 md:col-span-3">
             <button type="submit" disabled={pending} className="rounded-full bg-blue-800 px-4 py-2 text-sm font-semibold text-white disabled:opacity-40">{t.save}</button>
@@ -126,7 +126,7 @@ export function PersonsTable({ rows }: { rows: PersonRow[] }) {
               <tr key={r.id} className={`border-t ${r.active ? '' : 'text-neutral-400'}`}>
                 <td className="p-2">
                   {r.full_name}
-                  {r.notes && <div className="text-xs text-neutral-500">{r.notes}</div>}
+                  {r.dietary_notes && <div className="text-xs text-neutral-500">{r.dietary_notes}</div>}
                 </td>
                 <td className="p-2">{r.group_name ?? ''}</td>
                 <td className="p-2">{r.active ? P.active : P.inactive}</td>

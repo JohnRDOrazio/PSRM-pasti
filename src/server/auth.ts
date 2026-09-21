@@ -11,13 +11,14 @@ export interface Person {
   id: string
   full_name: string
   group_name: string | null
+  dietary_notes: string | null
 }
 
 export async function findPersonByToken(token: string): Promise<Person | null> {
   if (!isTokenShape(token)) return null
   const { data, error } = await db
     .from('persons')
-    .select('id, full_name, group_name')
+    .select('id, full_name, group_name, dietary_notes')
     .eq('token_hash', hashToken(token))
     .eq('active', true)
     .maybeSingle()

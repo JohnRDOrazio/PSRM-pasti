@@ -16,4 +16,20 @@ describe('persons_overview', () => {
       { id: b, full_name: 'Bruno', change_count: 0, last_change_at: null },
     ])
   })
+
+  it('exposes dietary_notes (the view must be recreated after the column rename)', async () => {
+    const a = await createPerson('Anna')
+    await sql`update persons set dietary_notes = 'celiaca' where id = ${a}`
+    expect(await q`select dietary_notes from persons_overview`).toEqual([{ dietary_notes: 'celiaca' }])
+  })
+})
+
+describe('day_roster', () => {
+  it('returns each active person’s dietary notes', async () => {
+    const a = await createPerson('Anna')
+    await createPerson('Bruno')
+    await sql`update persons set dietary_notes = 'celiaca' where id = ${a}`
+    const rows = await rpc<{ full_name: string; dietary_notes: string | null }[]>('day_roster', { p_date: '2026-10-20' })
+    expect(rows.map((r) => [r.full_name, r.dietary_notes])).toEqual([['Anna', 'celiaca'], ['Bruno', null]])
+  })
 })

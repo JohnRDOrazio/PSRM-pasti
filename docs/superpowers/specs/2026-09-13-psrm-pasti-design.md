@@ -294,5 +294,4 @@ Vercel project with env vars: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`,
 - Email or message delivery of personal links (admin shares via copy/QR).
 - Offline reads or queued offline writes.
 - Reminders/notifications for the summer opt-in season (likely v2).
-- Dietary notes.
 - Audit-logging of guest count edits (only `updated_by/updated_at`).
