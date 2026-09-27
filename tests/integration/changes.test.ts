@@ -203,3 +203,24 @@ describe('supersession uses commit order (seq), not created_at', () => {
     expect(await rpc('undo_change', { p_change: first.change_id, p_person: p, p_now: '2026-10-01T06:10:00Z' })).toEqual({ error: 'superseded' })
   })
 })
+
+describe('delete_person', () => {
+  it('removes the person with all their history and leaves everyone else untouched', async () => {
+    const a = await createPerson('Anna')
+    const b = await createPerson('Bruno')
+    await apply(a, '2026-10-20', 'lunch', '2026-10-22', 'dinner', false)
+    const r = await apply(a, '2026-10-25', 'lunch', '2026-10-25', 'lunch', false)
+    await rpc('undo_change', { p_change: r.change_id, p_person: a, p_now: NOW }) // undone_by links two of Anna's changes
+    await apply(b, '2026-10-20', 'dinner', '2026-10-20', 'dinner', false)
+
+    expect(await rpc('delete_person', { p_id: a })).toBe(true)
+
+    const count = async (table: string, person: string) =>
+      (await q<{ n: number }>`select count(*)::int as n from ${sql(table)} where ${sql(table === 'persons' ? 'id' : 'person_id')} = ${person}`)[0].n
+    for (const table of ['persons', 'changes', 'meal_choices', 'change_entries']) {
+      expect(await count(table, a), table).toBe(0)
+      expect(await count(table, b), table).toBeGreaterThan(0)
+    }
+    expect(await rpc('delete_person', { p_id: a })).toBe(false)
+  })
+})

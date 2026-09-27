@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useId, useState, useTransition } from 'react'
 import { type GroupResult, createGroup, deleteGroup, moveGroup, reorderGroups, updateGroup } from '@/app/admin/(protected)/gruppi/actions'
 import { t } from '@/i18n/it'
+import { PencilIcon, TrashIcon } from './icons'
 
 export interface GroupRow {
   id: string
@@ -119,7 +120,7 @@ export function GroupsEditor({ rows }: { rows: GroupRow[] }) {
                       <div className={`flex items-center justify-end gap-1 ${confirmDelete === r.id ? 'flex-wrap' : ''}`}>
                         <button type="button" disabled={pending || i === 0} onClick={() => run(() => moveGroup(r.id, 'up'), () => {})} aria-label={G.moveUp} title={G.moveUp} className="hidden rounded border px-2 py-1 disabled:opacity-40 sm:block">↑</button>
                         <button type="button" disabled={pending || i === order.length - 1} onClick={() => run(() => moveGroup(r.id, 'down'), () => {})} aria-label={G.moveDown} title={G.moveDown} className="hidden rounded border px-2 py-1 disabled:opacity-40 sm:block">↓</button>
-                        <button type="button" onClick={() => { setError(null); setEditing(r) }} aria-label={t.edit} title={t.edit} className="rounded border p-1.5">
+                        <button type="button" onClick={() => { setError(null); setEditing(r) }} aria-label={t.editItem(r.name)} title={t.edit} className="rounded border p-1.5">
                           <PencilIcon />
                         </button>
                         {confirmDelete === r.id ? (
@@ -128,7 +129,7 @@ export function GroupsEditor({ rows }: { rows: GroupRow[] }) {
                           <button
                             type="button"
                             disabled={r.member_count > 0}
-                            aria-label={t.delete}
+                            aria-label={t.deleteItem(r.name)}
                             title={r.member_count > 0 ? G.inUse : t.delete}
                             onClick={() => { setError(null); setConfirmDelete(r.id) }}
                             className="rounded border border-red-300 p-1.5 text-red-700 disabled:opacity-40"
@@ -173,25 +174,5 @@ function SortableRow({ id, name, disabled, children }: { id: string; name: strin
       </td>
       {children}
     </tr>
-  )
-}
-
-function PencilIcon() {
-  return (
-    <svg aria-hidden width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 20h9" />
-      <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
-    </svg>
-  )
-}
-
-function TrashIcon() {
-  return (
-    <svg aria-hidden width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 6h18" />
-      <path d="M8 6V4h8v2" />
-      <path d="M19 6l-1 14H6L5 6" />
-      <path d="M10 11v6M14 11v6" />
-    </svg>
   )
 }
