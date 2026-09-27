@@ -170,9 +170,10 @@ export const t = {
     persons: {
       title: 'Persone',
       new: 'Nuova persona',
-      name: 'Nome e cognome',
+      name: 'Cognome e nome',
       group: 'Gruppo',
       noGroup: '— nessuno —',
+      withoutGroup: 'Senza gruppo',
       dietaryNotes: 'Note alimentari',
       active: 'Attivo',
       inactive: 'Disattivato',
