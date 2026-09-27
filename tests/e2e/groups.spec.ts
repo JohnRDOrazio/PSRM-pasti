@@ -24,6 +24,18 @@ test('admin creates a group, assigns it from the persons dropdown, and the kitch
   await expect(page.getByRole('row').nth(1)).toContainText('Seminaristi')
   await expect(row.getByRole('button', { name: 'Sposta su' })).toBeDisabled()
 
+  // drag and drop by keyboard (Space, ArrowUp, Space) on the handle; the order is saved
+  const handle = page.getByRole('button', { name: 'Trascina per riordinare: Ospiti' })
+  await handle.focus()
+  await page.keyboard.press('Space')
+  await expect(handle).toHaveAttribute('aria-pressed', 'true')
+  await page.keyboard.press('ArrowUp')
+  await page.keyboard.press('Space')
+  await expect(page.getByRole('row').nth(1)).toContainText('Ospiti')
+  await expect(handle).toBeEnabled()
+  await page.reload()
+  await expect(page.getByRole('row').nth(1)).toContainText('Ospiti')
+
   // duplicate (case-insensitive) is refused with a message
   await page.getByRole('button', { name: 'Nuovo gruppo' }).click()
   await page.getByLabel('Nome').fill('seminaristi')

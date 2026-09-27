@@ -43,6 +43,15 @@ export async function moveGroup(id: string, direction: 'up' | 'down'): Promise<G
   return { ok: true }
 }
 
+/** Saves the order the admin dragged the groups into. */
+export async function reorderGroups(ids: string[]): Promise<GroupResult> {
+  await requireAdmin()
+  const { error } = await db.rpc('reorder_groups', { p_ids: z.array(z.uuid()).max(500).parse(ids) })
+  if (error) throw new Error(error.message)
+  revalidate()
+  return { ok: true }
+}
+
 /** Refused by the FK (on delete restrict) while people still belong to the group. */
 export async function deleteGroup(id: string): Promise<GroupResult> {
   await requireAdmin()

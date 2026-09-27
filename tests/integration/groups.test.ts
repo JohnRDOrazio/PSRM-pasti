@@ -68,4 +68,19 @@ describe('groups', () => {
     const roster = await rpc<{ person_id: string }[]>('day_roster', { p_date: '2026-10-20' })
     expect(roster.map((r) => r.person_id)).toEqual([b, a])
   })
+
+  it('reorder_groups saves a whole order; missing groups keep their order at the end, unknown ids are ignored', async () => {
+    const a = await ensureGroup('Ospiti')
+    const b = await ensureGroup('Seminaristi')
+    const c = await ensureGroup('Presbiterio')
+    await ensureGroup('Nuovo')
+    await rpc('reorder_groups', { p_ids: [b, c, crypto.randomUUID(), a] })
+    const rows = await q<{ name: string; position: number }>`select name, position from groups_overview order by position`
+    expect(rows).toEqual([
+      { name: 'Seminaristi', position: 1 },
+      { name: 'Presbiterio', position: 2 },
+      { name: 'Ospiti', position: 3 },
+      { name: 'Nuovo', position: 4 },
+    ])
+  })
 })
