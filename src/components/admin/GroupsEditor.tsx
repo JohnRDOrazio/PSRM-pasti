@@ -95,7 +95,7 @@ export function GroupsEditor({ rows }: { rows: GroupRow[] }) {
         <div className="overflow-x-auto rounded-xl bg-white shadow-sm">
           <table className="w-full text-sm">
             <thead className="bg-neutral-100 text-left">
-              <tr><th className="w-8 p-2"></th><th className="p-2">{G.name}</th><th className="p-2">{G.members}</th><th className="p-2"></th></tr>
+              <tr><th className="w-8 p-2"></th><th className="p-2">{G.name}</th><th className="w-px p-2">{G.members}</th><th className="p-2"></th></tr>
             </thead>
             <SortableContext items={order.map((g) => g.id)} strategy={verticalListSortingStrategy}>
               <tbody>
@@ -103,16 +103,18 @@ export function GroupsEditor({ rows }: { rows: GroupRow[] }) {
                 {order.map((r, i) => (
                   <SortableRow key={r.id} id={r.id} name={r.name} disabled={pending}>
                     <td className="p-2">{r.name}</td>
-                    <td className="p-2">{r.member_count}</td>
+                    <td className="p-2 text-center">{r.member_count}</td>
                     <td className="p-2">
-                      <div className="flex flex-wrap items-center justify-end gap-1">
-                        <button type="button" disabled={pending || i === 0} onClick={() => run(() => moveGroup(r.id, 'up'), () => {})} aria-label={G.moveUp} title={G.moveUp} className="rounded border px-2 py-1 disabled:opacity-40">↑</button>
-                        <button type="button" disabled={pending || i === order.length - 1} onClick={() => run(() => moveGroup(r.id, 'down'), () => {})} aria-label={G.moveDown} title={G.moveDown} className="rounded border px-2 py-1 disabled:opacity-40">↓</button>
+                      {/* One line, so the table keeps room for all buttons; it wraps only while the wider "Confermi?" shows.
+                          On phones the drag handle replaces the arrows, which would not fit. */}
+                      <div className={`flex items-center justify-end gap-1 ${confirmDelete === r.id ? 'flex-wrap' : ''}`}>
+                        <button type="button" disabled={pending || i === 0} onClick={() => run(() => moveGroup(r.id, 'up'), () => {})} aria-label={G.moveUp} title={G.moveUp} className="hidden rounded border px-2 py-1 disabled:opacity-40 sm:block">↑</button>
+                        <button type="button" disabled={pending || i === order.length - 1} onClick={() => run(() => moveGroup(r.id, 'down'), () => {})} aria-label={G.moveDown} title={G.moveDown} className="hidden rounded border px-2 py-1 disabled:opacity-40 sm:block">↓</button>
                         <button type="button" onClick={() => { setError(null); setEditing(r) }} aria-label={t.edit} title={t.edit} className="rounded border p-1.5">
                           <PencilIcon />
                         </button>
                         {confirmDelete === r.id ? (
-                          <button type="button" disabled={pending} onClick={() => run(() => deleteGroup(r.id), () => setConfirmDelete(null))} className="rounded bg-red-600 px-2 py-1 text-white">{t.confirmDelete}</button>
+                          <button type="button" disabled={pending} onClick={() => run(() => deleteGroup(r.id), () => setConfirmDelete(null))} className="whitespace-nowrap rounded bg-red-600 px-1.5 py-1 text-xs font-semibold text-white">{t.confirmDelete}</button>
                         ) : (
                           <button
                             type="button"
