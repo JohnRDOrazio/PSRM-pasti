@@ -170,9 +170,10 @@ export const t = {
     persons: {
       title: 'Persone',
       new: 'Nuova persona',
-      name: 'Nome e cognome',
+      name: 'Cognome e nome',
       group: 'Gruppo',
       noGroup: '— nessuno —',
+      withoutGroup: 'Senza gruppo',
       dietaryNotes: 'Note alimentari',
       active: 'Attivo',
       inactive: 'Disattivato',
@@ -187,6 +188,7 @@ export const t = {
       qr: 'QR',
       linkOnce: 'Questo link è visibile solo ora: copialo o mostra il QR.',
       cannotDelete: 'Ha delle modifiche registrate: puoi solo disattivarla.',
+      notDeletable: 'Non eliminabile',
     },
     groups: {
       title: 'Gruppi',
@@ -196,7 +198,9 @@ export const t = {
       none: 'Nessun gruppo.',
       duplicate: 'Esiste già un gruppo con questo nome.',
       inUse: 'Ci sono persone in questo gruppo: spostale prima di eliminarlo.',
-      hint: 'I gruppi compaiono nella scheda di ogni persona e nei conteggi della cucina.',
+      hint: 'I gruppi compaiono nella scheda di ogni persona e nei conteggi della cucina, in questo ordine: usa le frecce per cambiarlo.',
+      moveUp: 'Sposta su',
+      moveDown: 'Sposta giù',
     },
     seasons: {
       title: 'Stagioni',

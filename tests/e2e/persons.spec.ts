@@ -10,8 +10,8 @@ test('admin creates a person, gets a one-time link, and the member can open it',
   await page.goto('/admin/persone')
 
   await page.getByRole('button', { name: 'Nuova persona' }).click()
-  await page.getByLabel('Nome e cognome').fill('Giulia Verdi')
-  await page.getByLabel('Gruppo').selectOption({ label: 'Ospiti' })
+  await page.getByLabel('Cognome e nome').fill('Verdi Giulia')
+  await page.getByRole('combobox', { name: /^Gruppo/ }).selectOption({ label: 'Ospiti' })
   await page.getByRole('button', { name: 'Salva' }).click()
 
   const reveal = page.getByTestId('reveal')
@@ -19,8 +19,8 @@ test('admin creates a person, gets a one-time link, and the member can open it',
   const link = (await page.getByTestId('reveal-link').textContent())!.trim()
   expect(link).toMatch(/\/p\/[A-Za-z0-9_-]{43}$/)
   await expect(reveal.getByRole('img', { name: 'QR' })).toBeVisible()
-  await expect(page.getByRole('cell', { name: /Giulia Verdi/ })).toBeVisible()
-  await expect(page.getByRole('row', { name: /Giulia Verdi/ }).getByRole('cell', { name: 'Attivo' })).toBeVisible()
+  await expect(page.getByRole('cell', { name: /Verdi Giulia/ })).toBeVisible()
+  await expect(page.getByRole('row', { name: /Verdi Giulia/ }).getByRole('cell', { name: 'Attivo' })).toBeVisible()
   await page.getByRole('button', { name: 'Chiudi' }).click()
   await expect(reveal).toBeHidden()
 
@@ -28,11 +28,11 @@ test('admin creates a person, gets a one-time link, and the member can open it',
   const member = await ctx.newPage()
   await member.goto(link)
   await expect(member).toHaveURL(/\/$/)
-  await expect(member.getByRole('heading', { name: 'Giulia Verdi' })).toBeVisible()
+  await expect(member.getByRole('heading', { name: 'Verdi Giulia' })).toBeVisible()
   await ctx.close()
 
   // regenerate → old link dies
-  const row = page.getByRole('row', { name: /Giulia Verdi/ })
+  const row = page.getByRole('row', { name: /Verdi Giulia/ })
   await row.getByRole('button', { name: 'Rigenera link' }).click()
   await expect(page.getByTestId('reveal')).toBeVisible()
   const ctx2 = await browser.newContext()
@@ -44,5 +44,5 @@ test('admin creates a person, gets a one-time link, and the member can open it',
   // delete (no changes yet)
   await row.getByRole('button', { name: 'Elimina' }).click()
   await row.getByRole('button', { name: 'Confermi?' }).click()
-  await expect(page.getByRole('cell', { name: /Giulia Verdi/ })).toHaveCount(0)
+  await expect(page.getByRole('cell', { name: /Verdi Giulia/ })).toHaveCount(0)
 })

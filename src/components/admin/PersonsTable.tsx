@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation'
 import { Fragment, useState, useTransition } from 'react'
 import { type PersonInput, type Reveal, createPerson, deletePerson, regenerateToken, setPersonActive, updatePerson } from '@/app/admin/(protected)/persone/actions'
 import { formatDateTime, t } from '@/i18n/it'
+import { groupSections } from './personsTable.logic'
 
 export interface PersonRow {
   id: string
@@ -32,6 +33,7 @@ export function PersonsTable({ rows, groups }: { rows: PersonRow[]; groups: Grou
   const [error, setError] = useState<string | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const [regenerating, setRegenerating] = useState<string | null>(null)
+  const sections = groupSections(rows, groups, P.withoutGroup)
 
   function run(fn: () => Promise<void>) {
     start(async () => {
@@ -93,70 +95,76 @@ export function PersonsTable({ rows, groups }: { rows: PersonRow[]; groups: Grou
           <thead className="bg-neutral-100 text-left">
             <tr>
               <th className="p-2">{P.name}</th>
-              <th className="p-2">{P.group}</th>
               <th className="p-2">{P.status}</th>
-              <th className="p-2">{P.lastChange}</th>
               <th className="p-2"></th>
             </tr>
           </thead>
-          <tbody>
-            {rows.map((r) => (
-              <Fragment key={r.id}>
-                <tr className={`border-t ${r.active ? '' : 'text-neutral-400'}`}>
-                  <td className="p-2">
-                    {r.full_name}
-                    {r.dietary_notes && <div className="text-xs text-neutral-500">{r.dietary_notes}</div>}
-                  </td>
-                  <td className="p-2">{r.group_name ?? ''}</td>
-                  <td className="p-2">{r.active ? P.active : P.inactive}</td>
-                  <td className="p-2">{r.last_change_at ? formatDateTime(r.last_change_at) : P.never}</td>
-                  <td className="p-2">
-                    <div className="flex flex-wrap justify-end gap-2">
-                      <button type="button" onClick={() => { setReveal(null); setEditing(r) }} className="rounded border px-2 py-1">{t.edit}</button>
-                      <button type="button" disabled={pending} onClick={() => { setEditing(null); setRegenerating(r.id); run(async () => { setReveal(await regenerateToken(r.id)) }) }} className="rounded border px-2 py-1">
-                        {pending && regenerating === r.id ? t.loading : P.regenerate}
-                      </button>
-                      <button type="button" disabled={pending} onClick={() => run(() => setPersonActive(r.id, !r.active))} className="rounded border px-2 py-1">
-                        {r.active ? P.deactivate : P.activate}
-                      </button>
-                      {r.change_count === 0 && (confirmDelete === r.id ? (
-                        <button
-                          type="button"
-                          disabled={pending}
-                          onClick={() => run(async () => {
-                            const result = await deletePerson(r.id)
-                            setConfirmDelete(null)
-                            setDeleteError('error' in result ? P.cannotDelete : null)
-                          })}
-                          className="rounded bg-red-600 px-2 py-1 text-white"
-                        >
-                          {t.confirmDelete}
+          {sections.map((section) => (
+            <tbody key={section.key} aria-label={section.label}>
+              <tr className="border-t bg-neutral-50">
+                <th colSpan={3} scope="colgroup" className="p-2 text-left font-semibold text-blue-900">
+                  {section.label} <span className="font-normal text-neutral-500">({section.rows.length})</span>
+                </th>
+              </tr>
+              {section.rows.map((r) => (
+                <Fragment key={r.id}>
+                  <tr className={`border-t ${r.active ? '' : 'text-neutral-400'}`}>
+                    <td className="p-2">
+                      {r.full_name}
+                      {r.dietary_notes && <div className="text-xs text-neutral-500">{r.dietary_notes}</div>}
+                    </td>
+                    <td className="p-2">
+                      {r.active ? P.active : P.inactive}
+                      <div className="text-xs text-neutral-500">{P.lastChange}: {r.last_change_at ? formatDateTime(r.last_change_at) : P.never}</div>
+                    </td>
+                    <td className="p-2">
+                      <div className="flex flex-wrap justify-end gap-2">
+                        <button type="button" onClick={() => { setReveal(null); setEditing(r) }} className="rounded border px-2 py-1">{t.edit}</button>
+                        <button type="button" disabled={pending} onClick={() => { setEditing(null); setRegenerating(r.id); run(async () => { setReveal(await regenerateToken(r.id)) }) }} className="rounded border px-2 py-1">
+                          {pending && regenerating === r.id ? t.loading : P.regenerate}
                         </button>
-                      ) : (
-                        <button type="button" onClick={() => { setDeleteError(null); setConfirmDelete(r.id) }} className="rounded border border-red-300 px-2 py-1 text-red-700">{t.delete}</button>
-                      ))}
-                      {r.change_count > 0 && <span className="self-center text-xs text-neutral-400" title={P.cannotDelete}>{t.delete}: {P.cannotDelete}</span>}
-                    </div>
-                  </td>
-                </tr>
-                {/* Edit form and new link open right below the person, so the click has visible feedback. */}
-                {editing !== 'new' && editing?.id === r.id && (
-                  <tr ref={scrollIntoViewOnMount} className="bg-blue-50">
-                    <td colSpan={5} className="p-2">
-                      <PersonForm key={r.id} person={r} groups={groups} pending={pending} onSubmit={submitForm} onCancel={() => setEditing(null)} />
+                        <button type="button" disabled={pending} onClick={() => run(() => setPersonActive(r.id, !r.active))} className="rounded border px-2 py-1">
+                          {r.active ? P.deactivate : P.activate}
+                        </button>
+                        {r.change_count === 0 && (confirmDelete === r.id ? (
+                          <button
+                            type="button"
+                            disabled={pending}
+                            onClick={() => run(async () => {
+                              const result = await deletePerson(r.id)
+                              setConfirmDelete(null)
+                              setDeleteError('error' in result ? P.cannotDelete : null)
+                            })}
+                            className="rounded bg-red-600 px-2 py-1 text-white"
+                          >
+                            {t.confirmDelete}
+                          </button>
+                        ) : (
+                          <button type="button" onClick={() => { setDeleteError(null); setConfirmDelete(r.id) }} className="rounded border border-red-300 px-2 py-1 text-red-700">{t.delete}</button>
+                        ))}
+                        {r.change_count > 0 && <span className="self-center text-xs text-neutral-400" title={P.cannotDelete}>{P.notDeletable}</span>}
+                      </div>
                     </td>
                   </tr>
-                )}
-                {reveal?.id === r.id && (
-                  <tr ref={scrollIntoViewOnMount}>
-                    <td colSpan={5} className="p-2">
-                      <RevealPanel reveal={reveal} notice={notice} onCopy={() => copy(reveal.link)} onClose={() => setReveal(null)} />
-                    </td>
-                  </tr>
-                )}
+                  {/* Edit form and new link open right below the person, so the click has visible feedback. */}
+                  {editing !== 'new' && editing?.id === r.id && (
+                    <tr ref={scrollIntoViewOnMount} className="bg-blue-50">
+                      <td colSpan={3} className="p-2">
+                        <PersonForm key={r.id} person={r} groups={groups} pending={pending} onSubmit={submitForm} onCancel={() => setEditing(null)} />
+                      </td>
+                    </tr>
+                  )}
+                  {reveal?.id === r.id && (
+                    <tr ref={scrollIntoViewOnMount}>
+                      <td colSpan={3} className="p-2">
+                        <RevealPanel reveal={reveal} notice={notice} onCopy={() => copy(reveal.link)} onClose={() => setReveal(null)} />
+                      </td>
+                    </tr>
+                  )}
                 </Fragment>
-            ))}
-          </tbody>
+              ))}
+            </tbody>
+          ))}
         </table>
       </div>
     </div>

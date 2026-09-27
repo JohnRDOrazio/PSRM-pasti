@@ -18,6 +18,12 @@ test('admin creates a group, assigns it from the persons dropdown, and the kitch
   await expect(row).toBeVisible()
   await expect(row.getByRole('cell', { name: '0', exact: true })).toBeVisible()
 
+  // new groups go last; the arrows reorder them
+  await expect(page.getByRole('row').nth(1)).toContainText('Ospiti')
+  await row.getByRole('button', { name: 'Sposta su' }).click()
+  await expect(page.getByRole('row').nth(1)).toContainText('Seminaristi')
+  await expect(row.getByRole('button', { name: 'Sposta su' })).toBeDisabled()
+
   // duplicate (case-insensitive) is refused with a message
   await page.getByRole('button', { name: 'Nuovo gruppo' }).click()
   await page.getByLabel('Nome').fill('seminaristi')
@@ -28,9 +34,9 @@ test('admin creates a group, assigns it from the persons dropdown, and the kitch
   // assign from the persons page
   await page.goto('/admin/persone')
   await page.getByRole('row', { name: new RegExp(E2E.memberName) }).getByRole('button', { name: 'Modifica' }).click()
-  await page.getByLabel('Gruppo').selectOption({ label: 'Seminaristi' })
+  await page.getByRole('combobox', { name: /^Gruppo/ }).selectOption({ label: 'Seminaristi' })
   await page.getByRole('button', { name: 'Salva' }).click()
-  await expect(page.getByRole('row', { name: new RegExp(E2E.memberName) }).getByRole('cell', { name: 'Seminaristi' })).toBeVisible()
+  await expect(page.getByRole('rowgroup', { name: 'Seminaristi', exact: true }).getByRole('row', { name: new RegExp(E2E.memberName) })).toBeVisible()
 
   // kitchen shows the tag
   await page.goto('/admin?d=2026-10-20&tutti=1')
@@ -51,9 +57,9 @@ test('admin creates a group, assigns it from the persons dropdown, and the kitch
   // unassign → delete works
   await page.goto('/admin/persone')
   await page.getByRole('row', { name: new RegExp(E2E.memberName) }).getByRole('button', { name: 'Modifica' }).click()
-  await page.getByLabel('Gruppo').selectOption({ label: '— nessuno —' })
+  await page.getByRole('combobox', { name: /^Gruppo/ }).selectOption({ label: '— nessuno —' })
   await page.getByRole('button', { name: 'Salva' }).click()
-  await expect(page.getByRole('row', { name: new RegExp(E2E.memberName) }).getByRole('cell', { name: 'Seminario' })).toHaveCount(0)
+  await expect(page.getByRole('rowgroup', { name: 'Seminario', exact: true })).toHaveCount(0)
   await page.goto('/admin/gruppi')
   const free = page.getByRole('row', { name: /Seminario/ })
   await free.getByRole('button', { name: 'Elimina' }).click()
@@ -63,7 +69,7 @@ test('admin creates a group, assigns it from the persons dropdown, and the kitch
   // restore the member's original group for the other specs
   await page.goto('/admin/persone')
   await page.getByRole('row', { name: new RegExp(E2E.memberName) }).getByRole('button', { name: 'Modifica' }).click()
-  await page.getByLabel('Gruppo').selectOption({ label: 'Ospiti' })
+  await page.getByRole('combobox', { name: /^Gruppo/ }).selectOption({ label: 'Ospiti' })
   await page.getByRole('button', { name: 'Salva' }).click()
-  await expect(page.getByRole('row', { name: new RegExp(E2E.memberName) }).getByRole('cell', { name: 'Ospiti' })).toBeVisible()
+  await expect(page.getByRole('rowgroup', { name: 'Ospiti', exact: true }).getByRole('row', { name: new RegExp(E2E.memberName) })).toBeVisible()
 })
