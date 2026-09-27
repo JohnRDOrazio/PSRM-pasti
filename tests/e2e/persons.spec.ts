@@ -19,7 +19,7 @@ test('admin creates a person, gets a one-time link, and the member can open it',
   const link = (await page.getByTestId('reveal-link').textContent())!.trim()
   expect(link).toMatch(/\/p\/[A-Za-z0-9_-]{43}$/)
   await expect(reveal.getByRole('img', { name: 'QR' })).toBeVisible()
-  await expect(page.getByRole('cell', { name: /Verdi Giulia/ })).toBeVisible()
+  await expect(page.getByRole('cell', { name: 'Verdi Giulia', exact: true })).toBeVisible()
   await expect(page.getByRole('row', { name: /Verdi Giulia/ }).getByRole('switch', { name: 'Attivo' })).toBeChecked()
   await page.getByRole('button', { name: 'Chiudi' }).click()
   await expect(reveal).toBeHidden()
