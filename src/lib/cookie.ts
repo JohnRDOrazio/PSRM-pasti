@@ -1,4 +1,6 @@
 export const MEMBER_COOKIE = 'psrm_member'
+/** Set once an admin session is seen on this device; survives sign-out so member pages can still offer the admin login. */
+export const ADMIN_HINT_COOKIE = 'psrm_admin_hint'
 
 export function memberCookieOptions() {
   return {

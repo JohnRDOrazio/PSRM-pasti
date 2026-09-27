@@ -1,9 +1,11 @@
+import { cookies } from 'next/headers'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { formatDayLong, t } from '@/i18n/it'
+import { ADMIN_HINT_COOKIE } from '@/lib/cookie'
 import { isLocked } from '@/lib/cutoff'
 import { type IsoDate, type Meal, addDays, romeParts } from '@/lib/dates'
-import { getPersonFromCookie } from '@/server/auth'
+import { getAdmin, getPersonFromCookie } from '@/server/auth'
 import { db } from '@/server/db'
 import { getSettings } from '@/server/settings'
 import { type DayRow, DayList } from '@/components/DayList'
@@ -34,12 +36,20 @@ export default async function HomePage() {
     byDate.set(r.date, row)
   }
   const rows = [...byDate.values()]
+  // Members and admins share one installed icon on some phones: offer the way into the admin area
+  // to whoever has an admin session here, or had one before signing out.
+  const showAdmin = (await cookies()).has(ADMIN_HINT_COOKIE) || (await getAdmin()) !== null
   const seasonPresent = rows[0]?.lunch.defaultPresent ?? true
 
   return (
     <main className="mx-auto max-w-md px-4 pb-28 pt-6">
       <header className="mb-4">
-        <h1 className="text-2xl font-semibold">{person.full_name}</h1>
+        <div className="flex items-baseline justify-between gap-4">
+          <h1 className="text-2xl font-semibold">{person.full_name}</h1>
+          {showAdmin && (
+            <Link href="/admin" className="shrink-0 text-sm text-blue-800 hover:underline">{t.member.adminArea}</Link>
+          )}
+        </div>
         <p className="mt-2 rounded-lg bg-blue-50 p-3 text-sm text-blue-900">
           {seasonPresent ? t.member.seasonPresent : t.member.seasonAbsent} {t.member.explicitHint}
         </p>

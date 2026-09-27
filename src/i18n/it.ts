@@ -74,6 +74,7 @@ export const t = {
     saveError: 'Errore nel salvataggio, riprova.',
     lockedError: 'Questo pasto è già chiuso alle modifiche.',
     markPeriod: 'Segna un periodo',
+    adminArea: 'Area amministrazione',
     explicitHint: 'Il puntino indica una scelta diversa dal periodo.',
     notes: {
       title: 'Note alimentari',
@@ -113,6 +114,7 @@ export const t = {
   invalidLink: { title: 'Link non valido', body: 'Chiedi in cucina un nuovo link.' },
   offline: { title: 'Sei offline', body: 'Controlla la connessione e riprova.' },
   admin: {
+    appName: 'Pasti Admin',
     login: 'Accedi',
     email: 'Email',
     password: 'Password',
@@ -133,6 +135,7 @@ export const t = {
     },
     notAdmin: 'Questo account non è abilitato come amministratore.',
     logout: 'Esci',
+    myMeals: 'Le mie presenze',
     nav: { kitchen: 'Cucina', persons: 'Persone', groups: 'Gruppi', seasons: 'Stagioni', settings: 'Impostazioni', log: 'Registro', password: 'Password' },
     changePassword: {
       title: 'Cambia password',

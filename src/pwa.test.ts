@@ -11,6 +11,14 @@ describe('PWA assets', () => {
     for (const icon of m.icons) expect(existsSync(`public${icon.src}`)).toBe(true)
     expect(m.icons.map((i: { sizes: string }) => i.sizes)).toEqual(['192x192', '512x512'])
   })
+  it('has a separate admin manifest that opens the admin area', () => {
+    const m = JSON.parse(readFileSync('public/admin.webmanifest', 'utf8'))
+    const member = JSON.parse(readFileSync('public/manifest.webmanifest', 'utf8'))
+    expect(m.start_url).toBe('/admin')
+    expect(m.id).not.toBe(member.id)
+    expect(m.display).toBe('standalone')
+    for (const icon of m.icons) expect(existsSync(`public${icon.src}`)).toBe(true)
+  })
   it('ships a service worker that serves the offline page for navigations', () => {
     const sw = readFileSync('public/sw.js', 'utf8')
     expect(sw).toContain("'/offline'")
