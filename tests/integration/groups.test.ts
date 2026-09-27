@@ -83,4 +83,17 @@ describe('groups', () => {
       { name: 'Nuovo', position: 4 },
     ])
   })
+
+  it('reorder_groups counts a repeated id at its first place', async () => {
+    const a = await ensureGroup('Ospiti')
+    const b = await ensureGroup('Seminaristi')
+    const c = await ensureGroup('Presbiterio')
+    await rpc('reorder_groups', { p_ids: [b, a, b, c] })
+    const rows = await q<{ name: string; position: number }>`select name, position from groups_overview order by position`
+    expect(rows).toEqual([
+      { name: 'Seminaristi', position: 1 },
+      { name: 'Ospiti', position: 2 },
+      { name: 'Presbiterio', position: 3 },
+    ])
+  })
 })
