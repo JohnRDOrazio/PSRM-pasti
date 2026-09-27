@@ -113,43 +113,27 @@ export function PersonsTable({ rows, groups }: { rows: PersonRow[]; groups: Grou
                       {r.dietary_notes && <div className="text-xs text-neutral-500">{r.dietary_notes}</div>}
                     </td>
                     <td className="p-2">
-                      <ActiveSwitch active={r.active} disabled={pending} onToggle={() => run(() => setPersonActive(r.id, !r.active))} />
+                      <ActiveSwitch name={r.full_name} active={r.active} disabled={pending} onToggle={() => run(() => setPersonActive(r.id, !r.active))} />
                       <div className="mt-1 text-xs text-neutral-500">{P.lastChange}: {r.last_change_at ? formatDateTime(r.last_change_at) : P.never}</div>
                     </td>
                     <td className="p-2">
                       {/* On phones: icons on top, "Nuovo link" below, so the column is only as wide as that button. */}
                       <div className="flex flex-col items-end gap-1 sm:flex-row sm:items-center sm:justify-end">
-                        <div className={`flex items-center justify-end gap-1 ${confirmDelete === r.id ? 'flex-wrap' : ''}`}>
-                          <button type="button" onClick={() => { setReveal(null); setEditing(r) }} aria-label={t.edit} title={t.edit} className="rounded border p-1.5">
+                        <div className="flex items-center justify-end gap-1">
+                          <button type="button" onClick={() => { setReveal(null); setConfirmDelete(null); setEditing(r) }} aria-label={t.editItem(r.full_name)} title={t.edit} className="rounded border p-1.5">
                             <PencilIcon />
                           </button>
-                          {confirmDelete === r.id ? (
-                            <button
-                              type="button"
-                              disabled={pending}
-                              onClick={() => run(async () => {
-                                await deletePerson(r.id)
-                                setConfirmDelete(null)
-                              })}
-                              title={r.change_count > 0 ? P.deleteAllHint : undefined}
-                              className="whitespace-nowrap rounded bg-red-600 px-1.5 py-1 text-xs font-semibold text-white"
-                            >
-                              {/* With history, the confirmation says the history goes too. */}
-                              {r.change_count > 0 ? P.confirmDeleteAll : t.confirmDelete}
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              aria-label={t.delete}
-                              title={t.delete}
-                              onClick={() => setConfirmDelete(r.id)}
-                              className="rounded border border-red-300 p-1.5 text-red-700 disabled:opacity-40"
-                            >
-                              <TrashIcon />
-                            </button>
-                          )}
+                          <button
+                            type="button"
+                            aria-label={t.deleteItem(r.full_name)}
+                            title={t.delete}
+                            onClick={() => { setReveal(null); setEditing(null); setConfirmDelete(r.id) }}
+                            className="rounded border border-red-300 p-1.5 text-red-700"
+                          >
+                            <TrashIcon />
+                          </button>
                         </div>
-                        <button type="button" disabled={pending} title={P.regenerateHint} onClick={() => { setEditing(null); setRegenerating(r.id); run(async () => { setReveal(await regenerateToken(r.id)) }) }} className="whitespace-nowrap rounded border px-2 py-1">
+                        <button type="button" disabled={pending} title={P.regenerateHint} onClick={() => { setEditing(null); setConfirmDelete(null); setRegenerating(r.id); run(async () => { setReveal(await regenerateToken(r.id)) }) }} className="whitespace-nowrap rounded border px-2 py-1">
                           {pending && regenerating === r.id ? t.loading : P.regenerate}
                         </button>
                       </div>
@@ -160,6 +144,30 @@ export function PersonsTable({ rows, groups }: { rows: PersonRow[]; groups: Grou
                     <tr ref={scrollIntoViewOnMount} className="bg-blue-50">
                       <td colSpan={3} className="p-2">
                         <PersonForm key={r.id} person={r} groups={groups} pending={pending} onSubmit={submitForm} onCancel={() => setEditing(null)} />
+                      </td>
+                    </tr>
+                  )}
+                  {/* Always the full warning: the history count on screen may be stale by the time of the delete. */}
+                  {confirmDelete === r.id && (
+                    <tr ref={scrollIntoViewOnMount} className="bg-red-50">
+                      <td colSpan={3} className="p-2">
+                        <div role="alertdialog" aria-label={t.deleteItem(r.full_name)} className="rounded-xl border-2 border-red-300 bg-white p-4">
+                          <p className="text-sm">{P.deleteWarning(r.full_name)}</p>
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              disabled={pending}
+                              onClick={() => run(async () => {
+                                await deletePerson(r.id)
+                                setConfirmDelete(null)
+                              })}
+                              className="rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-40"
+                            >
+                              {P.deleteForever}
+                            </button>
+                            <button type="button" onClick={() => setConfirmDelete(null)} className="rounded-full border px-4 py-2 text-sm">{t.cancel}</button>
+                          </div>
+                        </div>
                       </td>
                     </tr>
                   )}
@@ -180,14 +188,14 @@ export function PersonsTable({ rows, groups }: { rows: PersonRow[]; groups: Grou
   )
 }
 
-/** On/off switch for whether the person's link works; screen readers hear "Attivo, switch, on/off". */
-function ActiveSwitch({ active, disabled, onToggle }: { active: boolean; disabled: boolean; onToggle: () => void }) {
+/** On/off switch for whether the person's link works; screen readers hear "Attivo: <name>, switch, on/off". */
+function ActiveSwitch({ name, active, disabled, onToggle }: { name: string; active: boolean; disabled: boolean; onToggle: () => void }) {
   return (
     <button
       type="button"
       role="switch"
       aria-checked={active}
-      aria-label={P.active}
+      aria-label={P.activeOf(name)}
       title={active ? P.deactivate : P.activate}
       disabled={disabled}
       onClick={onToggle}

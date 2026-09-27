@@ -56,6 +56,7 @@ test('admin creates a person, gets a one-time link, and the member can open it',
 
   // delete (no changes yet)
   await row.getByRole('button', { name: 'Elimina' }).click()
-  await row.getByRole('button', { name: 'Confermi?' }).click()
+  await expect(page.getByRole('alertdialog')).toContainText('Non si può annullare.')
+  await page.getByRole('button', { name: 'Elimina definitivamente' }).click()
   await expect(page.getByRole('cell', { name: /Verdi Giulia/ })).toHaveCount(0)
 })

@@ -120,7 +120,7 @@ export function GroupsEditor({ rows }: { rows: GroupRow[] }) {
                       <div className={`flex items-center justify-end gap-1 ${confirmDelete === r.id ? 'flex-wrap' : ''}`}>
                         <button type="button" disabled={pending || i === 0} onClick={() => run(() => moveGroup(r.id, 'up'), () => {})} aria-label={G.moveUp} title={G.moveUp} className="hidden rounded border px-2 py-1 disabled:opacity-40 sm:block">↑</button>
                         <button type="button" disabled={pending || i === order.length - 1} onClick={() => run(() => moveGroup(r.id, 'down'), () => {})} aria-label={G.moveDown} title={G.moveDown} className="hidden rounded border px-2 py-1 disabled:opacity-40 sm:block">↓</button>
-                        <button type="button" onClick={() => { setError(null); setEditing(r) }} aria-label={t.edit} title={t.edit} className="rounded border p-1.5">
+                        <button type="button" onClick={() => { setError(null); setEditing(r) }} aria-label={t.editItem(r.name)} title={t.edit} className="rounded border p-1.5">
                           <PencilIcon />
                         </button>
                         {confirmDelete === r.id ? (
@@ -129,7 +129,7 @@ export function GroupsEditor({ rows }: { rows: GroupRow[] }) {
                           <button
                             type="button"
                             disabled={r.member_count > 0}
-                            aria-label={t.delete}
+                            aria-label={t.deleteItem(r.name)}
                             title={r.member_count > 0 ? G.inUse : t.delete}
                             onClick={() => { setError(null); setConfirmDelete(r.id) }}
                             className="rounded border border-red-300 p-1.5 text-red-700 disabled:opacity-40"
