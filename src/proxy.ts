@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { MEMBER_COOKIE, memberCookieOptions } from '@/lib/cookie'
+import { ADMIN_HINT_COOKIE, MEMBER_COOKIE, memberCookieOptions } from '@/lib/cookie'
 
 export async function proxy(request: NextRequest) {
   if (request.nextUrl.pathname.startsWith('/admin')) return adminGuard(request)
@@ -26,6 +26,7 @@ async function adminGuard(request: NextRequest) {
   const { pathname } = request.nextUrl
   const isPublicAuthPage = pathname === '/admin/login' || pathname === '/admin/reset' || pathname.startsWith('/admin/reset/')
   if (!user && !isPublicAuthPage) return NextResponse.redirect(new URL('/admin/login', request.url))
+  if (user) res.cookies.set(ADMIN_HINT_COOKIE, '1', memberCookieOptions())
   return res
 }
 
