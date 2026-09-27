@@ -1,7 +1,7 @@
 'use client'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
-import { type GroupResult, createGroup, deleteGroup, updateGroup } from '@/app/admin/(protected)/gruppi/actions'
+import { type GroupResult, createGroup, deleteGroup, moveGroup, updateGroup } from '@/app/admin/(protected)/gruppi/actions'
 import { t } from '@/i18n/it'
 
 export interface GroupRow {
@@ -76,12 +76,14 @@ export function GroupsEditor({ rows }: { rows: GroupRow[] }) {
           </thead>
           <tbody>
             {rows.length === 0 && <tr><td colSpan={3} className="p-2 text-neutral-500">{G.none}</td></tr>}
-            {rows.map((r) => (
+            {rows.map((r, i) => (
               <tr key={r.id} className="border-t">
                 <td className="p-2">{r.name}</td>
                 <td className="p-2">{r.member_count}</td>
                 <td className="p-2">
                   <div className="flex justify-end gap-2">
+                    <button type="button" disabled={pending || i === 0} onClick={() => run(() => moveGroup(r.id, 'up'), () => {})} aria-label={G.moveUp} title={G.moveUp} className="rounded border px-2 py-1 disabled:opacity-40">↑</button>
+                    <button type="button" disabled={pending || i === rows.length - 1} onClick={() => run(() => moveGroup(r.id, 'down'), () => {})} aria-label={G.moveDown} title={G.moveDown} className="rounded border px-2 py-1 disabled:opacity-40">↓</button>
                     <button type="button" onClick={() => { setError(null); setEditing(r) }} className="rounded border px-2 py-1">{t.edit}</button>
                     {confirmDelete === r.id ? (
                       <button type="button" disabled={pending} onClick={() => run(() => deleteGroup(r.id), () => setConfirmDelete(null))} className="rounded bg-red-600 px-2 py-1 text-white">{t.confirmDelete}</button>

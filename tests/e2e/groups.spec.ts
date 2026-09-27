@@ -18,6 +18,12 @@ test('admin creates a group, assigns it from the persons dropdown, and the kitch
   await expect(row).toBeVisible()
   await expect(row.getByRole('cell', { name: '0', exact: true })).toBeVisible()
 
+  // new groups go last; the arrows reorder them
+  await expect(page.getByRole('row').nth(1)).toContainText('Ospiti')
+  await row.getByRole('button', { name: 'Sposta su' }).click()
+  await expect(page.getByRole('row').nth(1)).toContainText('Seminaristi')
+  await expect(row.getByRole('button', { name: 'Sposta su' })).toBeDisabled()
+
   // duplicate (case-insensitive) is refused with a message
   await page.getByRole('button', { name: 'Nuovo gruppo' }).click()
   await page.getByLabel('Nome').fill('seminaristi')

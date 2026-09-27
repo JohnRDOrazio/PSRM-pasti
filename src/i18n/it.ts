@@ -198,7 +198,9 @@ export const t = {
       none: 'Nessun gruppo.',
       duplicate: 'Esiste già un gruppo con questo nome.',
       inUse: 'Ci sono persone in questo gruppo: spostale prima di eliminarlo.',
-      hint: 'I gruppi compaiono nella scheda di ogni persona e nei conteggi della cucina.',
+      hint: 'I gruppi compaiono nella scheda di ogni persona e nei conteggi della cucina, in questo ordine: usa le frecce per cambiarlo.',
+      moveUp: 'Sposta su',
+      moveDown: 'Sposta giù',
     },
     seasons: {
       title: 'Stagioni',

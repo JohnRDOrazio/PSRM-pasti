@@ -46,4 +46,26 @@ describe('groups', () => {
     const roster = await rpc<{ group_name: string | null }[]>('day_roster', { p_date: '2026-10-20' })
     expect(roster[0].group_name).toBe('Sorelle')
   })
+
+  it('orders groups by position: new groups go last, move_group swaps neighbours', async () => {
+    const a = await ensureGroup('Ospiti')
+    const b = await ensureGroup('Seminaristi')
+    await ensureGroup('Presbiterio')
+    const order = async () => (await q<{ name: string }>`select name from groups_overview order by position`).map((r) => r.name)
+    expect(await order()).toEqual(['Ospiti', 'Seminaristi', 'Presbiterio'])
+    await rpc('move_group', { p_id: b, p_delta: -1 })
+    await rpc('move_group', { p_id: a, p_delta: 1 })
+    expect(await order()).toEqual(['Seminaristi', 'Presbiterio', 'Ospiti'])
+    await rpc('move_group', { p_id: b, p_delta: -1 }) // already first: no-op
+    await rpc('move_group', { p_id: a, p_delta: 1 }) // already last: no-op
+    expect(await order()).toEqual(['Seminaristi', 'Presbiterio', 'Ospiti'])
+  })
+
+  it('day_roster lists people in group order', async () => {
+    const a = await createPerson('Anna', 'Ospiti')
+    const b = await createPerson('Bruno', 'Seminaristi')
+    await rpc('move_group', { p_id: await ensureGroup('Seminaristi'), p_delta: -1 })
+    const roster = await rpc<{ person_id: string }[]>('day_roster', { p_date: '2026-10-20' })
+    expect(roster.map((r) => r.person_id)).toEqual([b, a])
+  })
 })
