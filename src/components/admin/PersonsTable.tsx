@@ -142,7 +142,7 @@ export function PersonsTable({ rows, groups }: { rows: PersonRow[]; groups: Grou
                         ) : (
                           <button type="button" onClick={() => { setDeleteError(null); setConfirmDelete(r.id) }} className="rounded border border-red-300 px-2 py-1 text-red-700">{t.delete}</button>
                         ))}
-                        {r.change_count > 0 && <span className="self-center text-xs text-neutral-400" title={P.cannotDelete}>{t.delete}: {P.cannotDelete}</span>}
+                        {r.change_count > 0 && <span className="self-center text-xs text-neutral-400" title={P.cannotDelete}>{P.notDeletable}</span>}
                       </div>
                     </td>
                   </tr>

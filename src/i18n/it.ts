@@ -188,6 +188,7 @@ export const t = {
       qr: 'QR',
       linkOnce: 'Questo link è visibile solo ora: copialo o mostra il QR.',
       cannotDelete: 'Ha delle modifiche registrate: puoi solo disattivarla.',
+      notDeletable: 'Non eliminabile',
     },
     groups: {
       title: 'Gruppi',
