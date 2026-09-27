@@ -105,28 +105,26 @@ export function GroupsEditor({ rows }: { rows: GroupRow[] }) {
                     <td className="p-2">{r.name}</td>
                     <td className="p-2">{r.member_count}</td>
                     <td className="p-2">
-                      <div className="flex items-center justify-end gap-2">
-                        <div className="flex gap-1">
-                          <button type="button" disabled={pending || i === 0} onClick={() => run(() => moveGroup(r.id, 'up'), () => {})} aria-label={G.moveUp} title={G.moveUp} className="rounded border px-2 py-1 disabled:opacity-40">↑</button>
-                          <button type="button" disabled={pending || i === order.length - 1} onClick={() => run(() => moveGroup(r.id, 'down'), () => {})} aria-label={G.moveDown} title={G.moveDown} className="rounded border px-2 py-1 disabled:opacity-40">↓</button>
-                        </div>
-                        {/* Stacked on phones so the table fits the screen; side by side from sm up. */}
-                        <div className="flex flex-col gap-1 sm:flex-row sm:gap-2">
-                          <button type="button" onClick={() => { setError(null); setEditing(r) }} className="rounded border px-2 py-1">{t.edit}</button>
-                          {confirmDelete === r.id ? (
-                            <button type="button" disabled={pending} onClick={() => run(() => deleteGroup(r.id), () => setConfirmDelete(null))} className="rounded bg-red-600 px-2 py-1 text-white">{t.confirmDelete}</button>
-                          ) : (
-                            <button
-                              type="button"
-                              disabled={r.member_count > 0}
-                              title={r.member_count > 0 ? G.inUse : undefined}
-                              onClick={() => { setError(null); setConfirmDelete(r.id) }}
-                              className="rounded border border-red-300 px-2 py-1 text-red-700 disabled:opacity-40"
-                            >
-                              {t.delete}
-                            </button>
-                          )}
-                        </div>
+                      <div className="flex flex-wrap items-center justify-end gap-1">
+                        <button type="button" disabled={pending || i === 0} onClick={() => run(() => moveGroup(r.id, 'up'), () => {})} aria-label={G.moveUp} title={G.moveUp} className="rounded border px-2 py-1 disabled:opacity-40">↑</button>
+                        <button type="button" disabled={pending || i === order.length - 1} onClick={() => run(() => moveGroup(r.id, 'down'), () => {})} aria-label={G.moveDown} title={G.moveDown} className="rounded border px-2 py-1 disabled:opacity-40">↓</button>
+                        <button type="button" onClick={() => { setError(null); setEditing(r) }} aria-label={t.edit} title={t.edit} className="rounded border p-1.5">
+                          <PencilIcon />
+                        </button>
+                        {confirmDelete === r.id ? (
+                          <button type="button" disabled={pending} onClick={() => run(() => deleteGroup(r.id), () => setConfirmDelete(null))} className="rounded bg-red-600 px-2 py-1 text-white">{t.confirmDelete}</button>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled={r.member_count > 0}
+                            aria-label={t.delete}
+                            title={r.member_count > 0 ? G.inUse : t.delete}
+                            onClick={() => { setError(null); setConfirmDelete(r.id) }}
+                            className="rounded border border-red-300 p-1.5 text-red-700 disabled:opacity-40"
+                          >
+                            <TrashIcon />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </SortableRow>
@@ -164,5 +162,25 @@ function SortableRow({ id, name, disabled, children }: { id: string; name: strin
       </td>
       {children}
     </tr>
+  )
+}
+
+function PencilIcon() {
+  return (
+    <svg aria-hidden width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+    </svg>
+  )
+}
+
+function TrashIcon() {
+  return (
+    <svg aria-hidden width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 6h18" />
+      <path d="M8 6V4h8v2" />
+      <path d="M19 6l-1 14H6L5 6" />
+      <path d="M10 11v6M14 11v6" />
+    </svg>
   )
 }
