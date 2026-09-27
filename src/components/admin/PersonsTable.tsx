@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation'
 import { Fragment, useState, useTransition } from 'react'
 import { type PersonInput, type Reveal, createPerson, deletePerson, regenerateToken, setPersonActive, updatePerson } from '@/app/admin/(protected)/persone/actions'
 import { formatDateTime, t } from '@/i18n/it'
+import { PencilIcon, TrashIcon } from './icons'
 import { groupSections } from './personsTable.logic'
 
 export interface PersonRow {
@@ -114,35 +115,45 @@ export function PersonsTable({ rows, groups }: { rows: PersonRow[]; groups: Grou
                       {r.dietary_notes && <div className="text-xs text-neutral-500">{r.dietary_notes}</div>}
                     </td>
                     <td className="p-2">
-                      {r.active ? P.active : P.inactive}
-                      <div className="text-xs text-neutral-500">{P.lastChange}: {r.last_change_at ? formatDateTime(r.last_change_at) : P.never}</div>
+                      <ActiveSwitch active={r.active} disabled={pending} onToggle={() => run(() => setPersonActive(r.id, !r.active))} />
+                      <div className="mt-1 text-xs text-neutral-500">{P.lastChange}: {r.last_change_at ? formatDateTime(r.last_change_at) : P.never}</div>
                     </td>
                     <td className="p-2">
-                      <div className="flex flex-wrap justify-end gap-2">
-                        <button type="button" onClick={() => { setReveal(null); setEditing(r) }} className="rounded border px-2 py-1">{t.edit}</button>
-                        <button type="button" disabled={pending} onClick={() => { setEditing(null); setRegenerating(r.id); run(async () => { setReveal(await regenerateToken(r.id)) }) }} className="rounded border px-2 py-1">
+                      {/* On phones: icons on top, "Nuovo link" below, so the column is only as wide as that button. */}
+                      <div className="flex flex-col items-end gap-1 sm:flex-row sm:items-center sm:justify-end">
+                        <div className="flex items-center gap-1">
+                          <button type="button" onClick={() => { setReveal(null); setEditing(r) }} aria-label={t.edit} title={t.edit} className="rounded border p-1.5">
+                            <PencilIcon />
+                          </button>
+                          {confirmDelete === r.id ? (
+                            <button
+                              type="button"
+                              disabled={pending}
+                              onClick={() => run(async () => {
+                                const result = await deletePerson(r.id)
+                                setConfirmDelete(null)
+                                setDeleteError('error' in result ? P.cannotDelete : null)
+                              })}
+                              className="whitespace-nowrap rounded bg-red-600 px-1.5 py-1 text-xs font-semibold text-white"
+                            >
+                              {t.confirmDelete}
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              disabled={r.change_count > 0}
+                              aria-label={t.delete}
+                              title={r.change_count > 0 ? P.cannotDelete : t.delete}
+                              onClick={() => { setDeleteError(null); setConfirmDelete(r.id) }}
+                              className="rounded border border-red-300 p-1.5 text-red-700 disabled:opacity-40"
+                            >
+                              <TrashIcon />
+                            </button>
+                          )}
+                        </div>
+                        <button type="button" disabled={pending} title={P.regenerateHint} onClick={() => { setEditing(null); setRegenerating(r.id); run(async () => { setReveal(await regenerateToken(r.id)) }) }} className="whitespace-nowrap rounded border px-2 py-1">
                           {pending && regenerating === r.id ? t.loading : P.regenerate}
                         </button>
-                        <button type="button" disabled={pending} onClick={() => run(() => setPersonActive(r.id, !r.active))} className="rounded border px-2 py-1">
-                          {r.active ? P.deactivate : P.activate}
-                        </button>
-                        {r.change_count === 0 && (confirmDelete === r.id ? (
-                          <button
-                            type="button"
-                            disabled={pending}
-                            onClick={() => run(async () => {
-                              const result = await deletePerson(r.id)
-                              setConfirmDelete(null)
-                              setDeleteError('error' in result ? P.cannotDelete : null)
-                            })}
-                            className="rounded bg-red-600 px-2 py-1 text-white"
-                          >
-                            {t.confirmDelete}
-                          </button>
-                        ) : (
-                          <button type="button" onClick={() => { setDeleteError(null); setConfirmDelete(r.id) }} className="rounded border border-red-300 px-2 py-1 text-red-700">{t.delete}</button>
-                        ))}
-                        {r.change_count > 0 && <span className="self-center text-xs text-neutral-400" title={P.cannotDelete}>{P.notDeletable}</span>}
                       </div>
                     </td>
                   </tr>
@@ -168,6 +179,24 @@ export function PersonsTable({ rows, groups }: { rows: PersonRow[]; groups: Grou
         </table>
       </div>
     </div>
+  )
+}
+
+/** On/off switch for whether the person's link works; screen readers hear "Attivo, switch, on/off". */
+function ActiveSwitch({ active, disabled, onToggle }: { active: boolean; disabled: boolean; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={active}
+      aria-label={P.active}
+      title={active ? P.deactivate : P.activate}
+      disabled={disabled}
+      onClick={onToggle}
+      className={`relative inline-flex h-6 w-10 shrink-0 items-center rounded-full transition-colors disabled:opacity-60 ${active ? 'bg-green-600' : 'bg-neutral-300'}`}
+    >
+      <span className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${active ? 'translate-x-[18px]' : 'translate-x-0.5'}`} />
+    </button>
   )
 }
 
