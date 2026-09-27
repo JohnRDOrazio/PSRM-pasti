@@ -187,7 +187,8 @@ export const t = {
       copied: 'Copiato',
       qr: 'QR',
       linkOnce: 'Questo link è visibile solo ora: copialo o mostra il QR.',
-      cannotDelete: 'Ha delle modifiche registrate: puoi solo disattivarla.',
+      confirmDeleteAll: 'Elimina tutto?',
+      deleteAllHint: 'Elimina la persona e tutto il suo storico: scelte dei pasti e voci del registro. Non si può annullare.',
     },
     groups: {
       title: 'Gruppi',

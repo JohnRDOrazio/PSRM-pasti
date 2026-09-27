@@ -32,7 +32,6 @@ export function PersonsTable({ rows, groups }: { rows: PersonRow[]; groups: Grou
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [deleteError, setDeleteError] = useState<string | null>(null)
   const [regenerating, setRegenerating] = useState<string | null>(null)
   const sections = groupSections(rows, groups, P.withoutGroup)
 
@@ -83,7 +82,6 @@ export function PersonsTable({ rows, groups }: { rows: PersonRow[]; groups: Grou
       </button>
 
       {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
-      {deleteError && <p role="alert" className="text-sm text-red-700">{deleteError}</p>}
 
       {editing === 'new' && (
         <div ref={scrollIntoViewOnMount}>
@@ -121,7 +119,7 @@ export function PersonsTable({ rows, groups }: { rows: PersonRow[]; groups: Grou
                     <td className="p-2">
                       {/* On phones: icons on top, "Nuovo link" below, so the column is only as wide as that button. */}
                       <div className="flex flex-col items-end gap-1 sm:flex-row sm:items-center sm:justify-end">
-                        <div className="flex items-center gap-1">
+                        <div className={`flex items-center justify-end gap-1 ${confirmDelete === r.id ? 'flex-wrap' : ''}`}>
                           <button type="button" onClick={() => { setReveal(null); setEditing(r) }} aria-label={t.edit} title={t.edit} className="rounded border p-1.5">
                             <PencilIcon />
                           </button>
@@ -130,21 +128,21 @@ export function PersonsTable({ rows, groups }: { rows: PersonRow[]; groups: Grou
                               type="button"
                               disabled={pending}
                               onClick={() => run(async () => {
-                                const result = await deletePerson(r.id)
+                                await deletePerson(r.id)
                                 setConfirmDelete(null)
-                                setDeleteError('error' in result ? P.cannotDelete : null)
                               })}
+                              title={r.change_count > 0 ? P.deleteAllHint : undefined}
                               className="whitespace-nowrap rounded bg-red-600 px-1.5 py-1 text-xs font-semibold text-white"
                             >
-                              {t.confirmDelete}
+                              {/* With history, the confirmation says the history goes too. */}
+                              {r.change_count > 0 ? P.confirmDeleteAll : t.confirmDelete}
                             </button>
                           ) : (
                             <button
                               type="button"
-                              disabled={r.change_count > 0}
                               aria-label={t.delete}
-                              title={r.change_count > 0 ? P.cannotDelete : t.delete}
-                              onClick={() => { setDeleteError(null); setConfirmDelete(r.id) }}
+                              title={t.delete}
+                              onClick={() => setConfirmDelete(r.id)}
                               className="rounded border border-red-300 p-1.5 text-red-700 disabled:opacity-40"
                             >
                               <TrashIcon />
