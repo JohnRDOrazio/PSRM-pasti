@@ -200,6 +200,13 @@ export const t = {
       inUse: 'Ci sono persone in questo gruppo: spostale prima di eliminarlo.',
       hint: 'I gruppi compaiono nella scheda di ogni persona e nei conteggi della cucina, in questo ordine: trascinali dalla maniglia o usa le frecce per cambiarlo.',
       dragHandle: (name: string) => `Trascina per riordinare: ${name}`,
+      drag: {
+        instructions: 'Per spostare un gruppo premi spazio o invio, usa le frecce su e giù, poi premi di nuovo spazio o invio per lasciarlo; esc annulla.',
+        picked: (name: string) => `Hai preso ${name}.`,
+        over: (name: string, target: string) => `${name} è sopra ${target}.`,
+        dropped: (name: string, target: string) => `${name} lasciato al posto di ${target}.`,
+        cancelled: (name: string) => `Spostamento di ${name} annullato.`,
+      },
       moveUp: 'Sposta su',
       moveDown: 'Sposta giù',
     },

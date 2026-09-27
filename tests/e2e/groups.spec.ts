@@ -30,6 +30,8 @@ test('admin creates a group, assigns it from the persons dropdown, and the kitch
   await page.keyboard.press('Space')
   await expect(handle).toHaveAttribute('aria-pressed', 'true')
   await page.keyboard.press('ArrowUp')
+  // drop only once the drag library has registered the new position (its live-region announcement)
+  await expect(page.getByRole('status').filter({ hasText: 'Ospiti è sopra Seminaristi.' })).toHaveCount(1)
   await page.keyboard.press('Space')
   await expect(page.getByRole('row').nth(1)).toContainText('Ospiti')
   await expect(handle).toBeEnabled()

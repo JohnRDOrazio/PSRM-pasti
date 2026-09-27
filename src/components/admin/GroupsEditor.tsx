@@ -1,5 +1,5 @@
 'use client'
-import { DndContext, type DragEndEvent, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core'
+import { type Announcements, DndContext, type DragEndEvent, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core'
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useRouter } from 'next/navigation'
@@ -54,6 +54,15 @@ export function GroupsEditor({ rows }: { rows: GroupRow[] }) {
     })
   }
 
+  // Screen-reader messages in Italian, naming groups instead of their ids.
+  const nameOf = (id: string | number) => order.find((g) => g.id === id)?.name ?? ''
+  const announcements: Announcements = {
+    onDragStart: ({ active }) => G.drag.picked(nameOf(active.id)),
+    onDragOver: ({ active, over }) => (over ? G.drag.over(nameOf(active.id), nameOf(over.id)) : undefined),
+    onDragEnd: ({ active, over }) => (over ? G.drag.dropped(nameOf(active.id), nameOf(over.id)) : G.drag.cancelled(nameOf(active.id))),
+    onDragCancel: ({ active }) => G.drag.cancelled(nameOf(active.id)),
+  }
+
   function onDragEnd({ active, over }: DragEndEvent) {
     if (!over || active.id === over.id) return
     const next = arrayMove(order, order.findIndex((g) => g.id === active.id), order.findIndex((g) => g.id === over.id))
@@ -91,7 +100,7 @@ export function GroupsEditor({ rows }: { rows: GroupRow[] }) {
         </form>
       )}
 
-      <DndContext id={dndId} sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+      <DndContext id={dndId} sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd} accessibility={{ announcements, screenReaderInstructions: { draggable: G.drag.instructions } }}>
         <div className="overflow-x-auto rounded-xl bg-white shadow-sm">
           <table className="w-full text-sm">
             <thead className="bg-neutral-100 text-left">
