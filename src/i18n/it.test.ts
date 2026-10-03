@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatDateTime, formatDayLong, formatDayShort, intervalSummary, plural, t } from './it'
+import { formatDateTime, formatDayLong, formatTime, formatDayShort, intervalSummary, plural, t } from './it'
 
 describe('plural', () => {
   it('picks singular for 1 and plural otherwise', () => {
@@ -17,6 +17,10 @@ describe('date formatting', () => {
   it('formats a timestamptz as gg/mm/aaaa, hh:mm in Rome time', () => {
     expect(formatDateTime('2026-09-20T08:30:00Z')).toBe('20/09/2026, 10:30') // CEST
     expect(formatDateTime('2026-01-13T09:05:00Z')).toBe('13/01/2026, 10:05') // CET
+  })
+  it('formats an instant as hh:mm:ss in Rome time', () => {
+    expect(formatTime(new Date('2026-09-20T08:30:07Z'))).toBe('10:30:07') // CEST
+    expect(formatTime(new Date('2026-01-13T23:05:00Z'))).toBe('00:05:00') // CET, next day
   })
 })
 

@@ -18,6 +18,13 @@ const dateTimeFmt = new Intl.DateTimeFormat('it-IT', {
   hourCycle: 'h23',
   timeZone: ROME_TZ,
 })
+const timeFmt = new Intl.DateTimeFormat('it-IT', {
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  hourCycle: 'h23',
+  timeZone: ROME_TZ,
+})
 
 export function formatDayShort(iso: IsoDate): string {
   return shortFmt.format(toUtcDate(iso))
@@ -28,6 +35,10 @@ export function formatDayLong(iso: IsoDate): string {
 /** ISO timestamp (timestamptz) → 'gg/mm/aaaa, hh:mm' in Rome time. */
 export function formatDateTime(iso: string): string {
   return dateTimeFmt.format(new Date(iso))
+}
+/** Instant → 'hh:mm:ss' in Rome time. */
+export function formatTime(d: Date): string {
+  return timeFmt.format(d)
 }
 
 function toMeal(m: Meal): string {
@@ -163,6 +174,8 @@ export const t = {
       defaultAbsent: 'periodo ad assenza predefinita',
       print: 'Stampa',
       dietaryNotes: 'Note alimentari',
+      refresh: 'Aggiorna',
+      updatedAt: (time: string) => `Aggiornato alle ${time}`,
     },
     persons: {
       title: 'Persone',
