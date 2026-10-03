@@ -1,8 +1,9 @@
 import Link from 'next/link'
-import { formatDayLong, mealName, mealNameLower, t } from '@/i18n/it'
+import { formatDayLong, formatTime, mealName, mealNameLower, t } from '@/i18n/it'
 import { type IsoDate, type Meal, MEALS, addDays, isIsoDate, romeParts } from '@/lib/dates'
 import { AdminToggle } from '@/components/admin/AdminToggle'
 import { type ExtraKind, GuestStepper } from '@/components/admin/GuestStepper'
+import { RefreshButton } from '@/components/admin/RefreshButton'
 import { requireAdmin } from '@/server/auth'
 import { db } from '@/server/db'
 import { type RosterRow, dietaryNotes, isExplicit, isPresent, summarise } from './kitchen.logic'
@@ -50,6 +51,7 @@ export default async function KitchenPage({ searchParams }: { searchParams: Prom
           <Link href={nav(addDays(date, 1))} aria-label={t.admin.kitchen.nextDay} className="rounded border px-3 py-1">›</Link>
         </div>
         <span className="text-lg capitalize">{formatDayLong(date)}</span>
+        <RefreshButton updatedAt={formatTime(new Date())} />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
