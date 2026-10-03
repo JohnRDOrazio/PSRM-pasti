@@ -29,9 +29,15 @@ test('admin creates a group, assigns it from the persons dropdown, and the kitch
   await handle.focus()
   await page.keyboard.press('Space')
   await expect(handle).toHaveAttribute('aria-pressed', 'true')
-  await page.keyboard.press('ArrowUp')
-  // drop only once the drag library has registered the new position (its live-region announcement)
-  await expect(page.getByRole('status').filter({ hasText: 'Ospiti è sopra Seminaristi.' })).toHaveCount(1)
+  // The live region says when the drag library is ready ("over" itself, rows measured) and when the
+  // row has moved. On a slow runner an ArrowUp sent before it is ready is ignored, so wait for the
+  // first and retry the key until the second shows (an extra ArrowUp at the top does nothing).
+  const live = (text: string) => page.getByRole('status').filter({ hasText: text })
+  await expect(live('Ospiti è sopra Ospiti.')).toHaveCount(1)
+  await expect(async () => {
+    await page.keyboard.press('ArrowUp')
+    await expect(live('Ospiti è sopra Seminaristi.')).toHaveCount(1, { timeout: 1000 })
+  }).toPass({ timeout: 10000 })
   await page.keyboard.press('Space')
   await expect(page.getByRole('row').nth(1)).toContainText('Ospiti')
   await expect(handle).toBeEnabled()
