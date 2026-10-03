@@ -19,6 +19,23 @@ test('guest stepper changes the total and admin toggle marks a member', async ({
   await lunch.getByRole('button', { name: '− Ospiti' }).click()
   await expect(lunch.getByText('Ospiti 0')).toBeVisible()
 
+  // Propedeutico ("Propd") is counted separately and adds to the total, independently of guests
+  await lunch.getByRole('button', { name: '+ Ospiti' }).click()
+  await expect(lunch.getByText('Ospiti 1')).toBeVisible()
+  await lunch.getByRole('button', { name: '+ Propd' }).click()
+  await lunch.getByRole('button', { name: '+ Propd' }).click()
+  await expect(lunch.getByText('Propd 2')).toBeVisible()
+  await expect(lunch.getByTestId('total-lunch')).toContainText('4')
+  await page.reload()
+  await expect(lunch.getByText('Ospiti 1')).toBeVisible()
+  await expect(lunch.getByText('Propd 2')).toBeVisible()
+  await lunch.getByRole('button', { name: '− Propd' }).click()
+  await lunch.getByRole('button', { name: '− Propd' }).click()
+  await expect(lunch.getByText('Propd 0')).toBeVisible()
+  await expect(lunch.getByText('Ospiti 1')).toBeVisible()
+  await lunch.getByRole('button', { name: '− Ospiti' }).click()
+  await expect(lunch.getByText('Ospiti 0')).toBeVisible()
+
   const row = lunch.getByRole('listitem').filter({ hasText: E2E.memberName })
   await row.getByRole('button', { name: 'Pranzo' }).click()
   await expect(row.getByRole('button', { name: 'Pranzo' })).toHaveAttribute('aria-pressed', 'false')
