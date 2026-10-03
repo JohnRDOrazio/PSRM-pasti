@@ -19,6 +19,18 @@ export function GuestStepper({ date, meal, kind = 'guests', count: initial, note
   const router = useRouter()
   const [count, setCount] = useState(initial)
   const [note, setNote] = useState(initialNote ?? '')
+  // A router.refresh() (Aggiorna, auto-refresh) keeps this component's state: adopt new server
+  // values, or "+" would save stale + 1 over another admin's count.
+  const [prevInitial, setPrevInitial] = useState(initial)
+  const [prevInitialNote, setPrevInitialNote] = useState(initialNote)
+  if (initial !== prevInitial) {
+    setPrevInitial(initial)
+    setCount(initial)
+  }
+  if (initialNote !== prevInitialNote) {
+    setPrevInitialNote(initialNote)
+    setNote(initialNote ?? '')
+  }
   const [pending, start] = useTransition()
   const { msg, show } = useToast()
 
