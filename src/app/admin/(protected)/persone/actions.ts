@@ -70,16 +70,14 @@ export async function setPersonActive(id: string, active: boolean): Promise<void
   revalidatePath('/admin/persone')
 }
 
-export async function deletePerson(id: string): Promise<{ ok: true } | { error: 'has_changes' }> {
+/** Deletes the person with their whole history (meal choices and change log), in one transaction. */
+export async function deletePerson(id: string): Promise<void> {
   await requireAdmin()
-  const pid = z.uuid().parse(id)
-  const { count, error: countError } = await db.from('changes').select('id', { count: 'exact', head: true }).eq('person_id', pid)
-  if (countError) throw new Error(countError.message)
-  if ((count ?? 0) > 0) return { error: 'has_changes' }
-  const { error } = await db.from('persons').delete().eq('id', pid)
+  const { error } = await db.rpc('delete_person', { p_id: z.uuid().parse(id) })
   if (error) throw new Error(error.message)
   revalidatePath('/admin/persone')
-  return { ok: true }
+  revalidatePath('/admin')
+  revalidatePath('/admin/registro')
 }
 
 export async function regenerateToken(id: string): Promise<Reveal> {

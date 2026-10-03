@@ -30,20 +30,22 @@ export async function adminSetPresence(input: z.infer<typeof presenceSchema>): P
 const guestsSchema = z.object({
   date: isoDateSchema,
   meal: mealSchema,
+  kind: z.enum(['guests', 'propd']).default('guests'),
   count: z.number().int().min(0).max(999),
   note: z.string().trim().max(200).optional(),
 })
 
-export async function setGuests(input: z.infer<typeof guestsSchema>): Promise<void> {
+/** Sets the per-meal headcount of guests or of the Propedeutico (kind); 0 removes the row. */
+export async function setGuests(input: z.input<typeof guestsSchema>): Promise<void> {
   const admin = await requireAdmin()
   const g = guestsSchema.parse(input)
   if (g.count === 0) {
-    const { error } = await db.from('meal_guests').delete().eq('date', g.date).eq('meal', g.meal)
+    const { error } = await db.from('meal_guests').delete().eq('date', g.date).eq('meal', g.meal).eq('kind', g.kind)
     if (error) throw new Error(error.message)
   } else {
     const { error } = await db.from('meal_guests').upsert(
-      { date: g.date, meal: g.meal, count: g.count, note: g.note || null, updated_by: admin.userId, updated_at: new Date().toISOString() },
-      { onConflict: 'date,meal' },
+      { date: g.date, meal: g.meal, kind: g.kind, count: g.count, note: g.note || null, updated_by: admin.userId, updated_at: new Date().toISOString() },
+      { onConflict: 'date,meal,kind' },
     )
     if (error) throw new Error(error.message)
   }

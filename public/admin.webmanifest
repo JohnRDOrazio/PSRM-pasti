@@ -1,9 +1,9 @@
 {
-  "id": "/",
-  "name": "PSRM Pasti",
-  "short_name": "Pasti",
+  "id": "/admin",
+  "name": "PSRM Pasti · Amministrazione",
+  "short_name": "Pasti Admin",
   "lang": "it",
-  "start_url": "/",
+  "start_url": "/admin",
   "scope": "/",
   "display": "standalone",
   "background_color": "#fafafa",

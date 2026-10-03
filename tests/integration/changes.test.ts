@@ -186,9 +186,10 @@ describe('effective_presence and day_roster', () => {
     await sql`insert into persons (full_name, token_hash, active) values ('Inattivo', 'x', false)`
     await apply(a, '2026-10-20', 'lunch', '2026-10-20', 'lunch', false)
     const rows = await rpc('day_roster', { p_date: '2026-10-20' })
+    // Group order (groups.position), not alphabetical: Suore was created first.
     expect(rows).toEqual([
-      { person_id: b, full_name: 'Bruno', group_name: 'Sacerdoti', dietary_notes: null, lunch_present: true, lunch_explicit: false, dinner_present: true, dinner_explicit: false },
       { person_id: a, full_name: 'Anna', group_name: 'Suore', dietary_notes: null, lunch_present: false, lunch_explicit: true, dinner_present: true, dinner_explicit: false },
+      { person_id: b, full_name: 'Bruno', group_name: 'Sacerdoti', dietary_notes: null, lunch_present: true, lunch_explicit: false, dinner_present: true, dinner_explicit: false },
     ])
   })
 })
@@ -200,5 +201,26 @@ describe('supersession uses commit order (seq), not created_at', () => {
     // Committed second, but carries an earlier timestamp (as if its transaction started first).
     await apply(p, '2026-10-20', 'lunch', '2026-10-20', 'lunch', true, { p_now: '2026-10-01T06:00:00Z' })
     expect(await rpc('undo_change', { p_change: first.change_id, p_person: p, p_now: '2026-10-01T06:10:00Z' })).toEqual({ error: 'superseded' })
+  })
+})
+
+describe('delete_person', () => {
+  it('removes the person with all their history and leaves everyone else untouched', async () => {
+    const a = await createPerson('Anna')
+    const b = await createPerson('Bruno')
+    await apply(a, '2026-10-20', 'lunch', '2026-10-22', 'dinner', false)
+    const r = await apply(a, '2026-10-25', 'lunch', '2026-10-25', 'lunch', false)
+    await rpc('undo_change', { p_change: r.change_id, p_person: a, p_now: NOW }) // undone_by links two of Anna's changes
+    await apply(b, '2026-10-20', 'dinner', '2026-10-20', 'dinner', false)
+
+    expect(await rpc('delete_person', { p_id: a })).toBe(true)
+
+    const count = async (table: string, person: string) =>
+      (await q<{ n: number }>`select count(*)::int as n from ${sql(table)} where ${sql(table === 'persons' ? 'id' : 'person_id')} = ${person}`)[0].n
+    for (const table of ['persons', 'changes', 'meal_choices', 'change_entries']) {
+      expect(await count(table, a), table).toBe(0)
+      expect(await count(table, b), table).toBeGreaterThan(0)
+    }
+    expect(await rpc('delete_person', { p_id: a })).toBe(false)
   })
 })

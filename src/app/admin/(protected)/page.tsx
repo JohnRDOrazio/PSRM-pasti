@@ -2,13 +2,13 @@ import Link from 'next/link'
 import { formatDayLong, formatTime, mealName, mealNameLower, t } from '@/i18n/it'
 import { type IsoDate, type Meal, MEALS, addDays, isIsoDate, romeParts } from '@/lib/dates'
 import { AdminToggle } from '@/components/admin/AdminToggle'
-import { GuestStepper } from '@/components/admin/GuestStepper'
+import { type ExtraKind, GuestStepper } from '@/components/admin/GuestStepper'
 import { RefreshButton } from '@/components/admin/RefreshButton'
 import { requireAdmin } from '@/server/auth'
 import { db } from '@/server/db'
 import { type RosterRow, dietaryNotes, isExplicit, isPresent, summarise } from './kitchen.logic'
 
-interface GuestRow { meal: Meal; count: number; note: string | null }
+interface GuestRow { meal: Meal; kind: ExtraKind; count: number; note: string | null }
 
 export default async function KitchenPage({ searchParams }: { searchParams: Promise<{ d?: string; tutti?: string }> }) {
   await requireAdmin()
@@ -19,7 +19,7 @@ export default async function KitchenPage({ searchParams }: { searchParams: Prom
 
   const [rosterRes, guestsRes, lunchDef, dinnerDef] = await Promise.all([
     db.rpc('day_roster', { p_date: date }),
-    db.from('meal_guests').select('meal, count, note').eq('date', date),
+    db.from('meal_guests').select('meal, kind, count, note').eq('date', date),
     db.rpc('season_default', { p_date: date, p_meal: 'lunch' }),
     db.rpc('season_default', { p_date: date, p_meal: 'dinner' }),
   ])
@@ -31,7 +31,8 @@ export default async function KitchenPage({ searchParams }: { searchParams: Prom
     throw new Error('season_default: expected boolean')
   }
   const roster = rosterRes.data as RosterRow[]
-  const guests = new Map(((guestsRes.data ?? []) as GuestRow[]).map((g) => [g.meal, g]))
+  // Per-meal extra headcounts: guests and the Propedeutico ("Propd").
+  const extras = new Map(((guestsRes.data ?? []) as GuestRow[]).map((g) => [`${g.meal}:${g.kind}`, g]))
   const defaults: Record<Meal, boolean> = { lunch: lunchDef.data, dinner: dinnerDef.data }
 
   const nav = (to: IsoDate) => `/admin?d=${to}${showAll ? '&tutti=1' : ''}`
@@ -56,8 +57,10 @@ export default async function KitchenPage({ searchParams }: { searchParams: Prom
       <div className="grid gap-4 md:grid-cols-2">
         {MEALS.map((meal) => {
           const s = summarise(roster, meal)
-          const g = guests.get(meal)
+          const g = extras.get(`${meal}:guests`)
+          const p = extras.get(`${meal}:propd`)
           const guestCount = g?.count ?? 0
+          const propdCount = p?.count ?? 0
           const defaultPresent = defaults[meal]
           const listed = roster.filter((r) => isPresent(r, meal) !== defaultPresent)
           const notes = dietaryNotes(roster, meal)
@@ -65,15 +68,20 @@ export default async function KitchenPage({ searchParams }: { searchParams: Prom
             <section key={meal} className="rounded-xl bg-white p-4 shadow-sm" data-testid={`meal-${meal}`}>
               <h2 className="text-xl font-semibold">{mealName[meal]}</h2>
               <p className="mt-1 text-3xl font-bold" data-testid={`total-${meal}`}>
-                {s.total + guestCount} <span className="text-base font-normal text-neutral-500">{t.admin.kitchen.total}</span>
+                {s.total + guestCount + propdCount} <span className="text-base font-normal text-neutral-500">{t.admin.kitchen.total}</span>
               </p>
               <p className="text-sm text-neutral-600">
                 {t.admin.kitchen.community} {s.total}
                 {s.byGroup.length > 1 && <> ({s.byGroup.map(([name, n]) => `${name} ${n}`).join(' · ')})</>}
                 {' · '}{t.admin.kitchen.guests} {guestCount}
+                {' · '}<abbr title={t.admin.kitchen.propdFull} className="no-underline">{t.admin.kitchen.propd}</abbr> {propdCount}
               </p>
-              <div className="no-print"><GuestStepper key={`${date}-${meal}`} date={date} meal={meal} count={guestCount} note={g?.note ?? null} /></div>
+              <div className="no-print">
+                <GuestStepper key={`${date}-${meal}-guests`} date={date} meal={meal} count={guestCount} note={g?.note ?? null} />
+                <GuestStepper key={`${date}-${meal}-propd`} date={date} meal={meal} kind="propd" count={propdCount} note={p?.note ?? null} />
+              </div>
               {g?.note && <p className="hidden text-sm print:block">{t.admin.kitchen.guests}: {g.note}</p>}
+              {p?.note && <p className="hidden text-sm print:block">{t.admin.kitchen.propdFull}: {p.note}</p>}
 
               <h3 className="mt-4 font-medium">
                 {defaultPresent ? t.admin.kitchen.absentAt(mealNameLower[meal]) : t.admin.kitchen.presentAt(mealNameLower[meal])} ({listed.length})

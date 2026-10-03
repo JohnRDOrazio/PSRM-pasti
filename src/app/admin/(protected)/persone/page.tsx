@@ -11,7 +11,7 @@ export default async function PersonsPage() {
       .select('id, full_name, group_id, group_name, dietary_notes, active, last_change_at, change_count')
       .order('active', { ascending: false })
       .order('full_name'),
-    db.from('groups').select('id, name').order('name'),
+    db.from('groups').select('id, name').order('position'),
   ])
   if (persons.error) throw new Error(persons.error.message)
   if (groups.error) throw new Error(groups.error.message)

@@ -5,7 +5,7 @@ import { db } from '@/server/db'
 
 export default async function GroupsPage() {
   await requireAdmin()
-  const { data, error } = await db.from('groups_overview').select('id, name, member_count').order('name')
+  const { data, error } = await db.from('groups_overview').select('id, name, member_count').order('position')
   if (error) throw new Error(error.message)
   return (
     <div>

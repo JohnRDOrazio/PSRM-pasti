@@ -18,6 +18,32 @@ test('admin creates a group, assigns it from the persons dropdown, and the kitch
   await expect(row).toBeVisible()
   await expect(row.getByRole('cell', { name: '0', exact: true })).toBeVisible()
 
+  // new groups go last; the arrows reorder them
+  await expect(page.getByRole('row').nth(1)).toContainText('Ospiti')
+  await row.getByRole('button', { name: 'Sposta su' }).click()
+  await expect(page.getByRole('row').nth(1)).toContainText('Seminaristi')
+  await expect(row.getByRole('button', { name: 'Sposta su' })).toBeDisabled()
+
+  // drag and drop by keyboard (Space, ArrowUp, Space) on the handle; the order is saved
+  const handle = page.getByRole('button', { name: 'Trascina per riordinare: Ospiti' })
+  await handle.focus()
+  await page.keyboard.press('Space')
+  await expect(handle).toHaveAttribute('aria-pressed', 'true')
+  // The live region says when the drag library is ready ("over" itself, rows measured) and when the
+  // row has moved. On a slow runner an ArrowUp sent before it is ready is ignored, so wait for the
+  // first and retry the key until the second shows (an extra ArrowUp at the top does nothing).
+  const live = (text: string) => page.getByRole('status').filter({ hasText: text })
+  await expect(live('Ospiti è sopra Ospiti.')).toHaveCount(1)
+  await expect(async () => {
+    await page.keyboard.press('ArrowUp')
+    await expect(live('Ospiti è sopra Seminaristi.')).toHaveCount(1, { timeout: 1000 })
+  }).toPass({ timeout: 10000 })
+  await page.keyboard.press('Space')
+  await expect(page.getByRole('row').nth(1)).toContainText('Ospiti')
+  await expect(handle).toBeEnabled()
+  await page.reload()
+  await expect(page.getByRole('row').nth(1)).toContainText('Ospiti')
+
   // duplicate (case-insensitive) is refused with a message
   await page.getByRole('button', { name: 'Nuovo gruppo' }).click()
   await page.getByLabel('Nome').fill('seminaristi')
@@ -28,9 +54,9 @@ test('admin creates a group, assigns it from the persons dropdown, and the kitch
   // assign from the persons page
   await page.goto('/admin/persone')
   await page.getByRole('row', { name: new RegExp(E2E.memberName) }).getByRole('button', { name: 'Modifica' }).click()
-  await page.getByLabel('Gruppo').selectOption({ label: 'Seminaristi' })
+  await page.getByRole('combobox', { name: /^Gruppo/ }).selectOption({ label: 'Seminaristi' })
   await page.getByRole('button', { name: 'Salva' }).click()
-  await expect(page.getByRole('row', { name: new RegExp(E2E.memberName) }).getByRole('cell', { name: 'Seminaristi' })).toBeVisible()
+  await expect(page.getByRole('rowgroup', { name: 'Seminaristi', exact: true }).getByRole('row', { name: new RegExp(E2E.memberName) })).toBeVisible()
 
   // kitchen shows the tag
   await page.goto('/admin?d=2026-10-20&tutti=1')
@@ -51,9 +77,9 @@ test('admin creates a group, assigns it from the persons dropdown, and the kitch
   // unassign → delete works
   await page.goto('/admin/persone')
   await page.getByRole('row', { name: new RegExp(E2E.memberName) }).getByRole('button', { name: 'Modifica' }).click()
-  await page.getByLabel('Gruppo').selectOption({ label: '— nessuno —' })
+  await page.getByRole('combobox', { name: /^Gruppo/ }).selectOption({ label: '— nessuno —' })
   await page.getByRole('button', { name: 'Salva' }).click()
-  await expect(page.getByRole('row', { name: new RegExp(E2E.memberName) }).getByRole('cell', { name: 'Seminario' })).toHaveCount(0)
+  await expect(page.getByRole('rowgroup', { name: 'Seminario', exact: true })).toHaveCount(0)
   await page.goto('/admin/gruppi')
   const free = page.getByRole('row', { name: /Seminario/ })
   await free.getByRole('button', { name: 'Elimina' }).click()
@@ -63,7 +89,7 @@ test('admin creates a group, assigns it from the persons dropdown, and the kitch
   // restore the member's original group for the other specs
   await page.goto('/admin/persone')
   await page.getByRole('row', { name: new RegExp(E2E.memberName) }).getByRole('button', { name: 'Modifica' }).click()
-  await page.getByLabel('Gruppo').selectOption({ label: 'Ospiti' })
+  await page.getByRole('combobox', { name: /^Gruppo/ }).selectOption({ label: 'Ospiti' })
   await page.getByRole('button', { name: 'Salva' }).click()
-  await expect(page.getByRole('row', { name: new RegExp(E2E.memberName) }).getByRole('cell', { name: 'Ospiti' })).toBeVisible()
+  await expect(page.getByRole('rowgroup', { name: 'Ospiti', exact: true }).getByRole('row', { name: new RegExp(E2E.memberName) })).toBeVisible()
 })
