@@ -30,6 +30,65 @@ describe('season_default (seeded: 10-01→06-30 present, 07-01→09-30 absent)',
   })
 })
 
+describe('season nesting (seeded: Anno 10-01→06-30, Estate 07-01→09-30)', () => {
+  const recurring = (label: string, start: string, end: string, present = false) =>
+    sql`insert into season_defaults (label, start_md, end_md, lunch_default, dinner_default) values (${label}, ${start}, ${end}, ${present}, ${present})`
+  const oneOff = (label: string, start: string, end: string) =>
+    sql`insert into season_defaults (label, start_date, end_date, lunch_default, dinner_default) values (${label}, ${start}, ${end}, false, false)`
+  const cleanup = () => sql`delete from season_defaults where label not in ('Anno', 'Estate')`
+
+  it('allows a recurring season nested in another, even across the year end, and the innermost wins', async () => {
+    try {
+      await recurring('Natale', '12-24', '01-06')
+      await recurring('Capodanno', '12-31', '01-01', true)
+      expect(await rpc('season_default', { p_date: '2026-12-25', p_meal: 'lunch' })).toBe(false)
+      expect(await rpc('season_default', { p_date: '2027-01-01', p_meal: 'lunch' })).toBe(true)
+      expect(await rpc('season_default', { p_date: '2027-01-07', p_meal: 'lunch' })).toBe(true)
+      expect(await rpc('season_default', { p_date: '2026-12-23', p_meal: 'lunch' })).toBe(true)
+    } finally {
+      await cleanup()
+    }
+  })
+
+  it.each([
+    ['across two seasons', '06-15', '07-15', 'Anno'],
+    ['across the year end', '12-01', '12-31', 'Natale'],
+    ['identical dates', '12-24', '01-06', 'Natale'],
+    ['the same whole year, written differently', '07-01', '06-30', 'Tutto'],
+  ])('rejects a recurring season that partly overlaps: %s', async (_, start, end, conflict) => {
+    try {
+      await recurring('Natale', '12-24', '01-06')
+      if (conflict === 'Tutto') await recurring('Tutto', '01-01', '12-31') // contains Anno and Estate: allowed
+      await expect(recurring('X', start, end)).rejects.toMatchObject({ code: '23P01', detail: conflict })
+    } finally {
+      await cleanup()
+    }
+  })
+
+  it('checks updates too, but not a season against itself', async () => {
+    try {
+      await recurring('Natale', '12-24', '01-06')
+      await sql`update season_defaults set label = 'Natale!' where label = 'Natale'`
+      await expect(sql`update season_defaults set end_md = '07-15' where label = 'Natale!'`)
+        .rejects.toMatchObject({ code: '23P01' })
+    } finally {
+      await cleanup()
+    }
+  })
+
+  it('applies the same rule among one-off seasons, but not between one-off and recurring', async () => {
+    try {
+      await oneOff('Novembre', '2026-11-01', '2026-11-30')
+      await oneOff('Ritiro', '2026-11-10', '2026-11-14')
+      await oneOff('Esercizi', '2026-06-28', '2026-07-03') // straddles Anno/Estate: fine
+      await expect(oneOff('Avvento', '2026-11-20', '2026-12-05')).rejects.toMatchObject({ code: '23P01', detail: 'Novembre' })
+      await expect(oneOff('Doppio', '2026-11-10', '2026-11-14')).rejects.toMatchObject({ code: '23P01', detail: 'Ritiro' })
+    } finally {
+      await cleanup()
+    }
+  })
+})
+
 describe('is_locked (settings: 10:00 / 10:00)', () => {
   it.each([
     ['2026-09-13', 'lunch', '2026-09-13T07:59:00Z', false],

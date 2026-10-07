@@ -5,18 +5,28 @@ import { requireAdmin } from '@/server/auth'
 import { db } from '@/server/db'
 import { type SeasonInput, seasonSchema, toRow } from './schema'
 
-export async function createSeason(input: SeasonInput): Promise<void> {
+/** `overlap` carries the label of the season the new dates partly overlap (or duplicate). */
+export type SeasonResult = { ok: true } | { error: 'overlap'; with: string }
+
+// Raised by the season_defaults_nesting trigger, with the conflicting label as detail.
+const EXCLUSION_VIOLATION = '23P01'
+
+export async function createSeason(input: SeasonInput): Promise<SeasonResult> {
   await requireAdmin()
   const { error } = await db.from('season_defaults').insert(toRow(seasonSchema.parse(input)))
+  if (error?.code === EXCLUSION_VIOLATION) return { error: 'overlap', with: error.details }
   if (error) throw new Error(error.message)
   revalidatePath('/admin/stagioni')
+  return { ok: true }
 }
 
-export async function updateSeason(id: string, input: SeasonInput): Promise<void> {
+export async function updateSeason(id: string, input: SeasonInput): Promise<SeasonResult> {
   await requireAdmin()
   const { error } = await db.from('season_defaults').update(toRow(seasonSchema.parse(input))).eq('id', z.uuid().parse(id))
+  if (error?.code === EXCLUSION_VIOLATION) return { error: 'overlap', with: error.details }
   if (error) throw new Error(error.message)
   revalidatePath('/admin/stagioni')
+  return { ok: true }
 }
 
 export async function deleteSeason(id: string): Promise<void> {

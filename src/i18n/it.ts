@@ -244,7 +244,8 @@ export const t = {
       lunchDefault: 'Pranzo predefinito',
       dinnerDefault: 'Cena predefinita',
       add: 'Aggiungi stagione',
-      hint: 'Le date specifiche vincono sulle stagioni annuali; tra date specifiche vince la più breve.',
+      hint: 'Le date specifiche vincono sulle stagioni annuali. Tra stagioni dello stesso tipo, una può stare dentro un\'altra (e ne è l\'eccezione) ma non sovrapporsi solo in parte.',
+      overlap: (label: string) => `Le date si sovrappongono in parte a «${label}»: una stagione può stare dentro un'altra o esserne separata, non accavallarsi.`,
     },
     settings: {
       title: 'Impostazioni',

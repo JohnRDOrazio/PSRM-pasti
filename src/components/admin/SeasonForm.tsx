@@ -1,7 +1,7 @@
 'use client'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
-import { createSeason, deleteSeason, updateSeason } from '@/app/admin/(protected)/stagioni/actions'
+import { createSeason, deleteSeason, type SeasonResult, updateSeason } from '@/app/admin/(protected)/stagioni/actions'
 import { daysInMonth, type SeasonInput } from '@/app/admin/(protected)/stagioni/schema'
 import { t } from '@/i18n/it'
 
@@ -69,11 +69,11 @@ export function SeasonsEditor({ rows }: { rows: SeasonListRow[] }) {
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  function run(fn: () => Promise<void>) {
+  function run(fn: () => Promise<SeasonResult | void>) {
     start(async () => {
       try {
-        await fn()
-        setError(null)
+        const r = await fn()
+        setError(r && 'error' in r ? S.overlap(r.with) : null)
       } catch (err) {
         console.error(err)
         setError(t.genericError)
@@ -92,9 +92,10 @@ export function SeasonsEditor({ rows }: { rows: SeasonListRow[] }) {
     e.preventDefault()
     const input = toInput(new FormData(e.currentTarget))
     run(async () => {
-      if (editing === 'new') await createSeason(input)
-      else if (editing) await updateSeason(editing.id, input)
-      setEditing(null)
+      if (!editing) return
+      const r = editing === 'new' ? await createSeason(input) : await updateSeason(editing.id, input)
+      if ('ok' in r) setEditing(null)
+      return r
     })
   }
 
