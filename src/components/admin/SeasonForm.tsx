@@ -2,7 +2,7 @@
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import { createSeason, deleteSeason, updateSeason } from '@/app/admin/(protected)/stagioni/actions'
-import type { SeasonInput } from '@/app/admin/(protected)/stagioni/schema'
+import { daysInMonth, type SeasonInput } from '@/app/admin/(protected)/stagioni/schema'
 import { t } from '@/i18n/it'
 
 export interface SeasonListRow {
@@ -17,6 +17,38 @@ export interface SeasonListRow {
 }
 
 const S = t.admin.seasons
+
+const monthFmt = new Intl.DateTimeFormat('it-IT', { month: 'long', timeZone: 'UTC' })
+const MONTHS = Array.from({ length: 12 }, (_, i) => monthFmt.format(new Date(Date.UTC(2024, i, 1))))
+const pad = (n: number) => String(n).padStart(2, '0')
+/** 'MM-DD' → '1 ottobre'. */
+function formatMd(md: string | null): string {
+  if (!md) return ''
+  const [m, d] = md.split('-').map(Number)
+  return `${d} ${MONTHS[m - 1]}`
+}
+
+/** Month + day dropdowns posting a single 'MM-DD' value under `name`; the day list follows the chosen month. */
+function MonthDaySelect({ name, label, defaultValue }: { name: string; label: string; defaultValue: string }) {
+  const [dm, dd] = defaultValue.split('-').map(Number)
+  const [month, setMonth] = useState(dm || 1)
+  const [day, setDay] = useState(dd || 1)
+  const max = daysInMonth(month)
+  return (
+    <fieldset className="block text-sm">
+      <legend>{label}</legend>
+      <input type="hidden" name={name} value={`${pad(month)}-${pad(day)}`} />
+      <div className="mt-1 flex gap-2">
+        <select aria-label={`${label} – ${S.month}`} value={month} onChange={(e) => { const m = Number(e.target.value); setMonth(m); setDay((d) => Math.min(d, daysInMonth(m))) }} className="w-full rounded border p-2">
+          {MONTHS.map((n, i) => <option key={i} value={i + 1}>{n}</option>)}
+        </select>
+        <select aria-label={`${label} – ${S.day}`} value={day} onChange={(e) => setDay(Number(e.target.value))} className="w-20 rounded border p-2">
+          {Array.from({ length: max }, (_, i) => <option key={i} value={i + 1}>{i + 1}</option>)}
+        </select>
+      </div>
+    </fieldset>
+  )
+}
 
 function toInput(fd: FormData): SeasonInput {
   const common = {
@@ -86,8 +118,8 @@ export function SeasonsEditor({ rows }: { rows: SeasonListRow[] }) {
           </label>
           {kind === 'recurring' ? (
             <>
-              <label className="block text-sm">{S.startMd}<input name="start_md" required pattern="\d{2}-\d{2}" placeholder="10-01" defaultValue={row?.start_md ?? ''} className="mt-1 w-full rounded border p-2" /></label>
-              <label className="block text-sm">{S.endMd}<input name="end_md" required pattern="\d{2}-\d{2}" placeholder="06-30" defaultValue={row?.end_md ?? ''} className="mt-1 w-full rounded border p-2" /></label>
+              <MonthDaySelect name="start_md" label={S.startMd} defaultValue={row?.start_md ?? '10-01'} />
+              <MonthDaySelect name="end_md" label={S.endMd} defaultValue={row?.end_md ?? '06-30'} />
             </>
           ) : (
             <>
@@ -113,7 +145,7 @@ export function SeasonsEditor({ rows }: { rows: SeasonListRow[] }) {
           {rows.map((r) => (
             <tr key={r.id} className="border-t">
               <td className="p-2">{r.label}</td>
-              <td className="p-2">{r.start_date ? `${r.start_date} → ${r.end_date}` : `${S.recurring}: ${r.start_md} → ${r.end_md}`}</td>
+              <td className="p-2">{r.start_date ? `${r.start_date} → ${r.end_date}` : `${S.recurring}: ${formatMd(r.start_md)} → ${formatMd(r.end_md)}`}</td>
               <td className="p-2">{r.lunch_default ? t.period.present : t.period.absent}</td>
               <td className="p-2">{r.dinner_default ? t.period.present : t.period.absent}</td>
               <td className="p-2">

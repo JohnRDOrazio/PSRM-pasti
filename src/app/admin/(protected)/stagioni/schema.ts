@@ -8,6 +8,10 @@ export function isValidMd(s: string): boolean {
   const dt = new Date(Date.UTC(2024, m - 1, d))
   return dt.getUTCMonth() === m - 1 && dt.getUTCDate() === d
 }
+/** Days in month m (1-12), counted in a leap year so February has 29 — same rule as isValidMd. */
+export function daysInMonth(m: number): number {
+  return new Date(Date.UTC(2024, m, 0)).getUTCDate()
+}
 const md = z.string().refine(isValidMd, 'MM-DD')
 const common = { label: z.string().trim().min(1).max(60), lunch_default: z.boolean(), dinner_default: z.boolean() }
 

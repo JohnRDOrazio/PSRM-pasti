@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { seasonSchema, toRow } from './schema'
+import { daysInMonth, seasonSchema, toRow } from './schema'
 
 describe('seasonSchema', () => {
   it('accepts a recurring season and maps it to a row', () => {
@@ -21,5 +21,11 @@ describe('isValidMd', () => {
     expect(seasonSchema.safeParse({ kind: 'recurring', label: 'X', start_md: '02-31', end_md: '03-01', lunch_default: true, dinner_default: true }).success).toBe(false)
     expect(seasonSchema.safeParse({ kind: 'recurring', label: 'X', start_md: '04-31', end_md: '05-01', lunch_default: true, dinner_default: true }).success).toBe(false)
     expect(seasonSchema.safeParse({ kind: 'recurring', label: 'X', start_md: '02-29', end_md: '03-01', lunch_default: true, dinner_default: true }).success).toBe(true)
+  })
+})
+
+describe('daysInMonth', () => {
+  it('counts days per month with a leap-year February', () => {
+    expect([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(daysInMonth)).toEqual([31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31])
   })
 })
